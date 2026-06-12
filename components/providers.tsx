@@ -12,6 +12,7 @@ import {
 } from "react";
 import { createApolloClient } from "@/lib/apollo";
 import type { ComparisonItem, RateLimitInfo } from "@/lib/types";
+import { SavedReposProvider } from "./saved-repos-provider";
 
 // ---- Rate limit context ----------------------------------------------------
 // Hooks report rateLimit from every query result; the nav badge reads it here.
@@ -128,7 +129,9 @@ export const Providers = ({ children }: { children: React.ReactNode }) => (
   <SessionProvider>
     <ApolloWrapper>
       <RateLimitProvider>
-        <ComparisonProvider>{children}</ComparisonProvider>
+        <SavedReposProvider>
+          <ComparisonProvider>{children}</ComparisonProvider>
+        </SavedReposProvider>
       </RateLimitProvider>
     </ApolloWrapper>
   </SessionProvider>
