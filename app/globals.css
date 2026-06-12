@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-background-primary text-text-primary font-sans antialiased;
+}
+
+/* Violet focus ring on all interactive elements (keyboard a11y) */
+*:focus-visible {
+  @apply outline-none ring-2 ring-accent-violet ring-offset-2 ring-offset-background-primary;
+}
+
+/* Hand-rolled prose styles for rendered READMEs (no typography plugin) */
+.readme-prose h1,
+.readme-prose h2,
+.readme-prose h3,
+.readme-prose h4 {
+  @apply font-display text-text-primary mt-6 mb-3 first:mt-0;
+}
+.readme-prose h1 { @apply text-xl; }
+.readme-prose h2 { @apply text-lg; }
+.readme-prose h3 { @apply text-base; }
+.readme-prose p { @apply my-3; }
+.readme-prose a { @apply text-accent-violet hover:underline; }
+.readme-prose ul { @apply my-3 list-disc pl-6; }
+.readme-prose ol { @apply my-3 list-decimal pl-6; }
+.readme-prose li { @apply my-1; }
+.readme-prose pre {
+  @apply my-3 overflow-x-auto rounded-md bg-background-primary p-4 font-mono text-xs;
+}
+.readme-prose code { @apply font-mono text-xs text-text-primary; }
+.readme-prose :not(pre) > code {
+  @apply rounded bg-background-tertiary px-1.5 py-0.5;
+}
+.readme-prose blockquote {
+  @apply my-3 border-l-2 border-accent-violet-border pl-4 text-text-muted;
+}
+.readme-prose img { @apply my-3 max-w-full rounded-md; }
+.readme-prose table { @apply my-3 w-full border-collapse text-xs; }
+.readme-prose th,
+.readme-prose td {
+  @apply border border-background-tertiary px-3 py-2 text-left;
+}
+.readme-prose hr { @apply my-6 border-background-tertiary; }
+
+/* Minimal dark scrollbar to match the deep-space theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2637;
+  border-radius: 5px;
+}
