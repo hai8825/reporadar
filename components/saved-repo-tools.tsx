@@ -4,24 +4,42 @@ import { useState } from "react";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
 import { CloseIcon } from "./icons";
 
-type TagEditorProps = {
+type SavedRepoToolsProps = {
   repoId: string;
-  tags: string[];
 };
 
-// Removable tag pills + inline add input, shown on saved repo cards
-export const TagEditor = ({ repoId, tags }: TagEditorProps) => {
-  const { addTag, removeTag } = useSavedRepos();
+// Footer row on saved repo cards: folder picker + removable tag pills +
+// inline add-tag input. Reads everything from the shared context, so all
+// changes propagate instantly with no refetch.
+export const SavedRepoTools = ({ repoId }: SavedRepoToolsProps) => {
+  const { saved, folders, addTag, removeTag, setRepoFolder } = useSavedRepos();
   const [draft, setDraft] = useState("");
 
-  const submit = () => {
+  const entry = saved.find((r) => r.id === repoId);
+  if (!entry) return null;
+
+  const submitTag = () => {
     addTag(repoId, draft);
     setDraft("");
   };
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-t border-background-tertiary pt-3">
-      {tags.map((tag) => (
+      <select
+        value={entry.folder ?? ""}
+        onChange={(e) => setRepoFolder(repoId, e.target.value || null)}
+        aria-label="Move to folder"
+        className="max-w-[10rem] rounded-md border border-background-tertiary bg-background-primary px-2 py-0.5 text-xs text-text-secondary focus:border-accent-violet"
+      >
+        <option value="">No folder</option>
+        {folders.map((folder) => (
+          <option key={folder} value={folder}>
+            {folder}
+          </option>
+        ))}
+      </select>
+
+      {entry.tags.map((tag) => (
         <span
           key={tag}
           className="inline-flex items-center gap-1 rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-xs text-accent-violet"
@@ -37,6 +55,7 @@ export const TagEditor = ({ repoId, tags }: TagEditorProps) => {
           </button>
         </span>
       ))}
+
       <input
         type="text"
         value={draft}
@@ -44,7 +63,7 @@ export const TagEditor = ({ repoId, tags }: TagEditorProps) => {
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            submit();
+            submitTag();
           }
         }}
         placeholder="+ tag"

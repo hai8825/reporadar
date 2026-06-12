@@ -10,8 +10,8 @@ type RepoGridProps = {
   error?: Error;
   emptyMessage: string;
   view?: ViewMode;
-  /** repo id → tags; presence enables the tag editor on each card */
-  tagsById?: Record<string, string[]>;
+  /** Collection page: enable the folder picker + tag editor on each card */
+  savedTools?: boolean;
 };
 
 // Shared grid for / and /collection: skeletons → error → empty → cards
@@ -21,7 +21,7 @@ export const RepoGrid = ({
   error,
   emptyMessage,
   view = "tile",
-  tagsById,
+  savedTools,
 }: RepoGridProps) => {
   const layout =
     view === "list"
@@ -63,12 +63,7 @@ export const RepoGrid = ({
   return (
     <div className={layout}>
       {repos.map((repo) => (
-        <RepoCard
-          key={repo.id}
-          repo={repo}
-          view={view}
-          tags={tagsById ? tagsById[repo.id] ?? [] : undefined}
-        />
+        <RepoCard key={repo.id} repo={repo} view={view} savedTools={savedTools} />
       ))}
     </div>
   );

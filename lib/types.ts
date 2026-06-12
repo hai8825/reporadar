@@ -99,5 +99,6 @@ export type SavedRepo = {
   id: string;
   nameWithOwner: string;
   savedAt: string; // ISO date, used for sort order
-  tags: string[]; // freeform collection labels, e.g. "esp32" — a repo can have many
+  tags: string[]; // freeform labels, e.g. "esp32" — a repo can have many
+  folder: string | null; // a repo lives in at most ONE folder (collection)
 };

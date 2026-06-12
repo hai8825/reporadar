@@ -10,12 +10,23 @@ import { useSavedRepos } from "@/hooks/useSavedRepos";
 import { useViewMode } from "@/hooks/useViewMode";
 import { SAVED_REPOS } from "@/lib/graphql/queries";
 import type { RepoCardData } from "@/lib/types";
+import { getActivityLevel, type ActivityLevel } from "@/lib/utils/activity";
+import { FOLDER_ALL, FOLDER_UNFILED, FolderCards } from "./folder-cards";
+
+const ACTIVITY_OPTIONS: Array<{ label: string; value: ActivityLevel }> = [
+  { label: "Active", value: "active" },
+  { label: "Maintained", value: "maintained" },
+  { label: "Slow", value: "slow" },
+  { label: "Inactive", value: "inactive" },
+];
 
 export default function CollectionPage() {
-  const { saved, savedIds, allTags, isReady } = useSavedRepos();
+  const { saved, savedIds, allTags, folders, isReady } = useSavedRepos();
   const [view, setView] = useViewMode();
   const [query, setQuery] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [activeLevels, setActiveLevels] = useState<ActivityLevel[]>([]);
+  const [activeFolder, setActiveFolder] = useState<string>(FOLDER_ALL);
 
   // Batch-fetch live data for all saved IDs — never render stale localStorage fields
   const { data, loading, error } = useQuery(SAVED_REPOS, {
@@ -26,42 +37,69 @@ export default function CollectionPage() {
 
   useReportRateLimit(data?.rateLimit);
 
-  const tagsById = useMemo(
-    () => Object.fromEntries(saved.map((r) => [r.id, r.tags])),
-    [saved],
-  );
+  const reposById = useMemo(() => {
+    const map = new Map<string, RepoCardData>();
+    for (const node of data?.nodes ?? []) {
+      if (node?.id) map.set(node.id, node);
+    }
+    return map;
+  }, [data]);
 
+  // A deleted folder may still be selected for one render — treat as All
+  const folder =
+    activeFolder === FOLDER_ALL ||
+    activeFolder === FOLDER_UNFILED ||
+    folders.includes(activeFolder)
+      ? activeFolder
+      : FOLDER_ALL;
+
+  // Filter pipeline over LIVE saved state (not query data), so unsaving,
+  // moving folders, and tag edits all update the list instantly
   const repos = useMemo(() => {
-    const idSet = new Set(savedIds); // filter against live state → unsave removes instantly
     const text = query.trim().toLowerCase();
 
-    return (data?.nodes ?? [])
-      .filter((node): node is RepoCardData => node != null && idSet.has(node.id))
+    return saved
+      .filter((entry) => {
+        if (folder === FOLDER_ALL) return true;
+        if (folder === FOLDER_UNFILED) return entry.folder === null;
+        return entry.folder === folder;
+      })
+      .filter((entry) =>
+        // AND semantics: repo must carry every selected tag
+        activeTags.every((tag) => entry.tags.includes(tag)),
+      )
+      .map((entry) => reposById.get(entry.id))
+      .filter((repo): repo is RepoCardData => repo !== undefined)
       .filter(
         (repo) =>
           !text ||
           repo.nameWithOwner.toLowerCase().includes(text) ||
           (repo.description ?? "").toLowerCase().includes(text),
       )
-      .filter((repo) =>
-        // AND semantics: repo must carry every selected tag
-        activeTags.every((tag) => (tagsById[repo.id] ?? []).includes(tag)),
-      )
-      .sort((a, b) => savedIds.indexOf(a.id) - savedIds.indexOf(b.id));
-  }, [data, savedIds, query, activeTags, tagsById]);
+      .filter(
+        (repo) =>
+          // OR semantics: any selected activity level matches
+          activeLevels.length === 0 ||
+          activeLevels.includes(getActivityLevel(repo.pushedAt, repo.isArchived).level),
+      );
+  }, [saved, folder, activeTags, reposById, query, activeLevels]);
 
-  const toggleTag = (tag: string) =>
-    setActiveTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
+  const toggleIn = <T,>(list: T[], value: T): T[] =>
+    list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+
+  const hasActiveFilter =
+    query.trim() !== "" ||
+    activeTags.length > 0 ||
+    activeLevels.length > 0 ||
+    folder !== FOLDER_ALL;
 
   if (isReady && savedIds.length === 0) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
         <h1 className="font-display text-2xl text-text-primary">Nothing saved yet</h1>
         <p className="max-w-sm text-sm text-text-secondary">
-          Hit the bookmark on any repo card to build your collection, then tag
-          repos to group them (e.g. “esp32”).
+          Hit the bookmark on any repo card to build your collection, then
+          organize repos into folders and tag them (e.g. “esp32”).
         </p>
         <Link href="/" className="mt-2 text-sm text-accent-violet hover:underline">
           Discover repos →
@@ -77,6 +115,8 @@ export default function CollectionPage() {
         <ViewToggle mode={view} onChange={setView} />
       </div>
 
+      <FolderCards active={folder} onSelect={setActiveFolder} reposById={reposById} />
+
       <input
         type="search"
         value={query}
@@ -87,39 +127,65 @@ export default function CollectionPage() {
       />
 
       {allTags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-muted">
+        <section
+          aria-label="Tags"
+          className="rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-4"
+        >
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-text-muted">
             Tags
-          </span>
-          {allTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => toggleTag(tag)}
-              aria-pressed={activeTags.includes(tag)}
-              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                activeTags.includes(tag)
-                  ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
-                  : "border-background-tertiary text-text-secondary hover:border-text-muted"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setActiveTags((prev) => toggleIn(prev, tag))}
+                aria-pressed={activeTags.includes(tag)}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                  activeTags.includes(tag)
+                    ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+                    : "border-background-tertiary text-text-secondary hover:border-text-muted"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-text-muted">
+          Activity
+        </span>
+        {ACTIVITY_OPTIONS.map(({ label, value }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setActiveLevels((prev) => toggleIn(prev, value))}
+            aria-pressed={activeLevels.includes(value)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              activeLevels.includes(value)
+                ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+                : "border-background-tertiary text-text-secondary hover:border-text-muted"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       <RepoGrid
         repos={repos}
-        loading={!isReady || (loading && repos.length === 0 && !query && activeTags.length === 0)}
+        loading={!isReady || (loading && repos.length === 0 && !hasActiveFilter)}
         error={error}
         emptyMessage={
-          query || activeTags.length
+          hasActiveFilter
             ? "No saved repos match this filter."
             : "None of your saved repos could be loaded."
         }
         view={view}
-        tagsById={tagsById}
+        savedTools
       />
     </div>
   );

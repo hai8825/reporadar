@@ -8,16 +8,16 @@ import type { ViewMode } from "@/hooks/useViewMode";
 import { formatCount } from "@/lib/utils/format";
 import { ActivityBadge } from "./activity-badge";
 import { BookmarkIcon, CompareIcon, ForkIcon, StarIcon } from "./icons";
-import { TagEditor } from "./tag-editor";
+import { SavedRepoTools } from "./saved-repo-tools";
 
 type RepoCardProps = {
   repo: RepoCardData;
   view?: ViewMode;
-  /** When set, the card renders an editable tag row (collection page) */
-  tags?: string[];
+  /** Collection page: render the folder picker + tag editor footer */
+  savedTools?: boolean;
 };
 
-export const RepoCard = ({ repo, view = "tile", tags }: RepoCardProps) => {
+export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => {
   const { isSaved, toggleSave } = useSavedRepos();
   const { isStaged, canStage, toggleStaged } = useComparison();
 
@@ -122,7 +122,7 @@ export const RepoCard = ({ repo, view = "tile", tags }: RepoCardProps) => {
           {actions}
         </div>
         <div className="md:hidden">{meta}</div>
-        {tags && <TagEditor repoId={repo.id} tags={tags} />}
+        {savedTools && <SavedRepoTools repoId={repo.id} />}
       </article>
     );
   }
@@ -142,7 +142,7 @@ export const RepoCard = ({ repo, view = "tile", tags }: RepoCardProps) => {
 
       <div className="mt-auto">{meta}</div>
 
-      {tags && <TagEditor repoId={repo.id} tags={tags} />}
+      {savedTools && <SavedRepoTools repoId={repo.id} />}
     </article>
   );
 };
