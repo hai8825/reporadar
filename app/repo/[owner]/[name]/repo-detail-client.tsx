@@ -5,9 +5,10 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ActivityBadge } from "@/components/activity-badge";
-import { ForkIcon, StarIcon } from "@/components/icons";
+import { BookmarkIcon, ForkIcon, StarIcon } from "@/components/icons";
 import { LanguageBar } from "@/components/language-bar";
 import { useReportRateLimit } from "@/components/providers";
+import { useSavedRepos } from "@/hooks/useSavedRepos";
 import { REPO_DETAIL } from "@/lib/graphql/queries";
 import { formatCount, formatDate, timeAgo } from "@/lib/utils/format";
 
@@ -17,6 +18,8 @@ type RepoDetailClientProps = {
 };
 
 export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
+  const { isSaved, toggleSave } = useSavedRepos();
+
   const { data, loading, error } = useQuery(REPO_DETAIL, {
     variables: { owner, name },
   });
@@ -59,6 +62,19 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
             {repo.nameWithOwner}
           </h1>
           <ActivityBadge pushedAt={repo.pushedAt} isArchived={repo.isArchived} />
+          <button
+            type="button"
+            onClick={() => toggleSave({ id: repo.id, nameWithOwner: repo.nameWithOwner })}
+            aria-pressed={isSaved(repo.id)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs transition-colors ${
+              isSaved(repo.id)
+                ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+                : "border-background-tertiary text-text-secondary hover:border-accent-violet-border hover:text-accent-violet"
+            }`}
+          >
+            <BookmarkIcon className="h-3.5 w-3.5" filled={isSaved(repo.id)} />
+            {isSaved(repo.id) ? "Saved" : "Save"}
+          </button>
           {repo.isArchived && (
             <span className="rounded-full border border-[#EF4444]/50 px-2.5 py-0.5 text-xs text-[#EF4444]">
               Archived
