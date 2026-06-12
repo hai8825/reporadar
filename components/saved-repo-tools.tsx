@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
-import { CloseIcon } from "./icons";
+import { ChevronDownIcon, CloseIcon } from "./icons";
 
 type SavedRepoToolsProps = {
   repoId: string;
@@ -25,19 +25,36 @@ export const SavedRepoTools = ({ repoId }: SavedRepoToolsProps) => {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-t border-background-tertiary pt-3">
-      <select
-        value={entry.folder ?? ""}
-        onChange={(e) => setRepoFolder(repoId, e.target.value || null)}
-        aria-label="Move to folder"
-        className="max-w-[10rem] rounded-md border border-background-tertiary bg-background-primary px-2 py-0.5 text-xs text-text-secondary focus:border-accent-violet"
-      >
-        <option value="">No folder</option>
-        {folders.map((folder) => (
-          <option key={folder} value={folder}>
-            {folder}
+      {/* Native select with the OS arrow replaced by our own chevron —
+          appearance-none, then position the icon over the right padding */}
+      <span className="relative inline-flex">
+        <select
+          value={entry.folder ?? ""}
+          onChange={(e) => setRepoFolder(repoId, e.target.value || null)}
+          aria-label="Move to folder"
+          className={`max-w-[10rem] cursor-pointer appearance-none truncate rounded-full border bg-transparent py-0.5 pl-2.5 pr-7 text-xs transition-colors hover:border-text-muted focus:border-accent-violet ${
+            entry.folder
+              ? "border-accent-violet-border text-text-secondary"
+              : "border-background-tertiary text-text-muted"
+          }`}
+        >
+          {/* the popup list itself is OS-rendered; give options dark colors
+              where browsers honor them (Chrome/Edge do) */}
+          <option value="" className="bg-background-primary text-text-primary">
+            No folder
           </option>
-        ))}
-      </select>
+          {folders.map((folder) => (
+            <option
+              key={folder}
+              value={folder}
+              className="bg-background-primary text-text-primary"
+            >
+              {folder}
+            </option>
+          ))}
+        </select>
+        <ChevronDownIcon className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-text-muted" />
+      </span>
 
       {entry.tags.map((tag) => (
         <span
