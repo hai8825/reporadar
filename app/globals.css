@@ -12,6 +12,11 @@ body {
 }
 
 /* Hand-rolled prose styles for rendered READMEs (no typography plugin) */
+.readme-prose {
+  /* READMEs are full of long bare URLs and unbroken identifiers —
+     break anywhere rather than overflow the container */
+  overflow-wrap: anywhere;
+}
 .readme-prose h1,
 .readme-prose h2,
 .readme-prose h3,
