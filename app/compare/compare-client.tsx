@@ -173,7 +173,7 @@ export const CompareClient = () => {
                     {repo.nameWithOwner}
                   </Link>
                   {repo.description && (
-                    <p className="mt-1 line-clamp-2 text-xs font-normal text-text-secondary">
+                    <p className="mt-1 line-clamp-2 break-words text-xs font-normal text-text-secondary">
                       {repo.description}
                     </p>
                   )}

@@ -22,7 +22,7 @@ export const RepoCard = ({ repo }: RepoCardProps) => {
   const [owner, name] = repo.nameWithOwner.split("/");
 
   return (
-    <article className="group relative flex flex-col gap-3 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-4 transition-colors hover:border-accent-violet/40 hover:bg-background-tertiary">
+    <article className="group relative flex min-w-0 flex-col gap-3 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-4 transition-colors hover:border-accent-violet/40 hover:bg-background-tertiary">
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/repo/${owner}/${name}`}
@@ -64,7 +64,9 @@ export const RepoCard = ({ repo }: RepoCardProps) => {
       </div>
 
       {repo.description && (
-        <p className="line-clamp-2 text-sm text-text-secondary">{repo.description}</p>
+        <p className="line-clamp-2 break-words text-sm text-text-secondary">
+          {repo.description}
+        </p>
       )}
 
       <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">

@@ -66,7 +66,9 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
           )}
         </div>
         {repo.description && (
-          <p className="max-w-3xl text-sm text-text-secondary">{repo.description}</p>
+          <p className="max-w-3xl break-words text-sm text-text-secondary">
+            {repo.description}
+          </p>
         )}
 
         {/* Stats row */}
