@@ -11,7 +11,7 @@ import { useViewMode } from "@/hooks/useViewMode";
 import { SAVED_REPOS } from "@/lib/graphql/queries";
 import type { RepoCardData } from "@/lib/types";
 import { getActivityLevel, type ActivityLevel } from "@/lib/utils/activity";
-import { FOLDER_ALL, FOLDER_UNFILED, FolderCards } from "./folder-cards";
+import { FOLDER_ALL, FolderCards } from "./folder-cards";
 
 const ACTIVITY_OPTIONS: Array<{ label: string; value: ActivityLevel }> = [
   { label: "Active", value: "active" },
@@ -47,9 +47,7 @@ export default function CollectionPage() {
 
   // A deleted folder may still be selected for one render — treat as All
   const folder =
-    activeFolder === FOLDER_ALL ||
-    activeFolder === FOLDER_UNFILED ||
-    folders.includes(activeFolder)
+    activeFolder === FOLDER_ALL || folders.includes(activeFolder)
       ? activeFolder
       : FOLDER_ALL;
 
@@ -59,11 +57,7 @@ export default function CollectionPage() {
     const text = query.trim().toLowerCase();
 
     return saved
-      .filter((entry) => {
-        if (folder === FOLDER_ALL) return true;
-        if (folder === FOLDER_UNFILED) return entry.folder === null;
-        return entry.folder === folder;
-      })
+      .filter((entry) => folder === FOLDER_ALL || entry.folder === folder)
       .filter((entry) =>
         // AND semantics: repo must carry every selected tag
         activeTags.every((tag) => entry.tags.includes(tag)),

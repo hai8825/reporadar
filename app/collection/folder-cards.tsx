@@ -5,10 +5,9 @@ import { CloseIcon, PencilIcon } from "@/components/icons";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
 import type { RepoCardData, SavedRepo } from "@/lib/types";
 
-// Sentinel keys for the two built-in views. Real folder names are unlikely to
-// collide, and createFolder trims input so these can't be created by typing.
+// Sentinel key for the built-in "everything" view. Real folder names are
+// unlikely to collide, and createFolder trims input so it can't be typed.
 export const FOLDER_ALL = "__all__";
-export const FOLDER_UNFILED = "__unfiled__";
 
 type FolderStats = {
   count: number;
@@ -81,12 +80,6 @@ export const FolderCards = ({ active, onSelect, reposById }: FolderCardsProps) =
       stats: computeStats(saved.filter((r) => r.folder === folder), reposById),
       deletable: true,
     })),
-    {
-      key: FOLDER_UNFILED,
-      label: "Unfiled",
-      stats: computeStats(saved.filter((r) => r.folder === null), reposById),
-      deletable: false,
-    },
   ];
 
   return (
