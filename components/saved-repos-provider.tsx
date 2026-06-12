@@ -63,6 +63,7 @@ type SavedReposContextValue = {
   addTag: (repoId: string, tag: string) => void;
   removeTag: (repoId: string, tag: string) => void;
   createFolder: (name: string) => void;
+  renameFolder: (from: string, to: string) => void;
   deleteFolder: (name: string) => void;
   setRepoFolder: (repoId: string, folder: string | null) => void;
 };
@@ -176,6 +177,26 @@ export const SavedReposProvider = ({
     [mutateFolders],
   );
 
+  // Rename keeps repos filed: the folder list entry and every repo's
+  // folder field move together. No-op when the target name is taken.
+  // Validates against current state up front — state updaters run during
+  // the re-render, so a cross-updater flag wouldn't be set in time.
+  const renameFolder = useCallback(
+    (from: string, to: string) => {
+      const trimmed = to.trim();
+      if (!trimmed || trimmed === from || !folders.includes(from)) return;
+      const taken = folders.some(
+        (f) => f !== from && f.toLowerCase() === trimmed.toLowerCase(),
+      );
+      if (taken) return;
+      mutateFolders((prev) => prev.map((f) => (f === from ? trimmed : f)));
+      mutateSaved((prev) =>
+        prev.map((r) => (r.folder === from ? { ...r, folder: trimmed } : r)),
+      );
+    },
+    [folders, mutateFolders, mutateSaved],
+  );
+
   // Deleting a folder unfiles its repos — it never unsaves them
   const deleteFolder = useCallback(
     (name: string) => {
@@ -208,6 +229,7 @@ export const SavedReposProvider = ({
       addTag,
       removeTag,
       createFolder,
+      renameFolder,
       deleteFolder,
       setRepoFolder,
     };
@@ -219,6 +241,7 @@ export const SavedReposProvider = ({
     addTag,
     removeTag,
     createFolder,
+    renameFolder,
     deleteFolder,
     setRepoFolder,
   ]);

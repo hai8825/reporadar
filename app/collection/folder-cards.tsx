@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CloseIcon } from "@/components/icons";
+import { CloseIcon, PencilIcon } from "@/components/icons";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
 import type { RepoCardData, SavedRepo } from "@/lib/types";
 
@@ -49,12 +49,28 @@ type FolderCardsProps = {
 };
 
 export const FolderCards = ({ active, onSelect, reposById }: FolderCardsProps) => {
-  const { saved, folders, createFolder, deleteFolder } = useSavedRepos();
+  const { saved, folders, createFolder, renameFolder, deleteFolder } =
+    useSavedRepos();
   const [draft, setDraft] = useState("");
+  // Folder currently being renamed inline + its draft name
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
 
   const submitFolder = () => {
     createFolder(draft);
     setDraft("");
+  };
+
+  const commitRename = (from: string) => {
+    const next = editDraft.trim();
+    // Mirror renameFolder's validity check so we only re-select on success
+    const willRename =
+      next !== "" &&
+      next !== from &&
+      !folders.some((f) => f !== from && f.toLowerCase() === next.toLowerCase());
+    renameFolder(from, next);
+    if (willRename && active === from) onSelect(next);
+    setEditing(null);
   };
 
   const cards: Array<{ key: string; label: string; stats: FolderStats; deletable: boolean }> = [
@@ -92,13 +108,40 @@ export const FolderCards = ({ active, onSelect, reposById }: FolderCardsProps) =
                 : "border-background-tertiary bg-background-primary hover:border-text-muted"
             }`}
           >
+            {editing === key ? (
+              <div className="p-3">
+                <input
+                  autoFocus
+                  type="text"
+                  value={editDraft}
+                  onChange={(e) => setEditDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitRename(key);
+                    }
+                    if (e.key === "Escape") setEditing(null);
+                  }}
+                  onBlur={() => setEditing(null)}
+                  aria-label={`Rename folder ${label}`}
+                  className="w-full rounded-md border border-accent-violet-border bg-background-primary px-2 py-1 font-display text-sm text-text-primary"
+                />
+                <p className="mt-1.5 text-[10px] text-text-muted">
+                  Enter to rename · Esc to cancel
+                </p>
+              </div>
+            ) : (
             <button
               type="button"
               onClick={() => onSelect(key)}
               aria-pressed={active === key}
               className="flex w-full flex-col gap-2 p-3 text-left"
             >
-              <span className="flex items-baseline justify-between gap-2 pr-5">
+              <span
+                className={`flex items-baseline justify-between gap-2 ${
+                  deletable ? "pr-10" : ""
+                }`}
+              >
                 <span
                   className={`truncate font-display text-sm font-medium ${
                     active === key ? "text-accent-violet" : "text-text-primary"
@@ -139,20 +182,35 @@ export const FolderCards = ({ active, onSelect, reposById }: FolderCardsProps) =
                 </span>
               )}
             </button>
+            )}
 
-            {deletable && (
-              <button
-                type="button"
-                aria-label={`Delete folder ${label} (repos stay saved)`}
-                title="Delete folder — repos stay saved"
-                onClick={() => {
-                  if (active === key) onSelect(FOLDER_ALL);
-                  deleteFolder(key);
-                }}
-                className="absolute right-2 top-2.5 rounded p-0.5 text-text-muted opacity-0 hover:text-text-primary focus-visible:opacity-100 group-hover/folder:opacity-100"
-              >
-                <CloseIcon className="h-3 w-3" />
-              </button>
+            {deletable && editing !== key && (
+              <div className="absolute right-2 top-2.5 flex gap-0.5">
+                <button
+                  type="button"
+                  aria-label={`Rename folder ${label}`}
+                  title="Rename folder"
+                  onClick={() => {
+                    setEditing(key);
+                    setEditDraft(label);
+                  }}
+                  className="rounded p-0.5 text-text-muted opacity-0 hover:text-text-primary focus-visible:opacity-100 group-hover/folder:opacity-100"
+                >
+                  <PencilIcon className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Delete folder ${label} (repos stay saved)`}
+                  title="Delete folder — repos stay saved"
+                  onClick={() => {
+                    if (active === key) onSelect(FOLDER_ALL);
+                    deleteFolder(key);
+                  }}
+                  className="rounded p-0.5 text-text-muted opacity-0 hover:text-text-primary focus-visible:opacity-100 group-hover/folder:opacity-100"
+                >
+                  <CloseIcon className="h-3 w-3" />
+                </button>
+              </div>
             )}
           </div>
         ))}
