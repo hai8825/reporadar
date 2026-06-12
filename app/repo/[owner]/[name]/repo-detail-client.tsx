@@ -3,6 +3,8 @@
 import { useQuery } from "@apollo/client";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { ActivityBadge } from "@/components/activity-badge";
 import { BookmarkIcon, ForkIcon, StarIcon } from "@/components/icons";
@@ -145,7 +147,13 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
           <h2 className="mb-4 font-display text-lg text-text-primary">README</h2>
           {repo.readme?.text ? (
             <div className="readme-prose text-sm leading-relaxed text-text-secondary">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {/* rehype-raw renders the HTML embedded in most READMEs;
+                  rehype-sanitize (GitHub-style schema) strips anything
+                  dangerous — these are untrusted third-party documents */}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, rehypeSanitize]}
+              >
                 {repo.readme.text}
               </ReactMarkdown>
             </div>
