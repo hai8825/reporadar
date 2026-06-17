@@ -1,0 +1,140 @@
+// Prisma 7: driver-adapter based, `prisma-client` generator, and the
+// datasource URL lives in prisma.config.ts (not here).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---- NextAuth models -------------------------------------------------------
+// Shape required by @next-auth/prisma-adapter. We keep JWT sessions (so the
+// GitHub access token can ride the token into the Apollo auth link), but the
+// adapter still persists User + Account, and Session/VerificationToken are
+// included for completeness.
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  // GitHub handle, surfaced in the nav — populated from the OAuth profile
+  login         String?
+
+  accounts   Account[]
+  sessions   Session[]
+  savedRepos SavedRepo[]
+  folders    Folder[]
+  tags       Tag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---- RepoRadar domain ------------------------------------------------------
+
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Deleting a folder unfiles its repos — it never unsaves them
+  repos SavedRepo[]
+
+  // Folder names are unique per user
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model SavedRepo {
+  id String @id @default(cuid())
+
+  // GitHub's GraphQL node id (e.g. "R_kgDO..."); also the comparison/save key
+  githubId      String
+  nameWithOwner String
+
+  userId   String
+  folderId String?
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  tags SavedRepoTag[]
+
+  savedAt DateTime @default(now())
+
+  // A repo can only be saved once per user
+  @@unique([userId, githubId])
+  @@index([userId])
+  @@index([folderId])
+}
+
+model Tag {
+  id     String @id @default(cuid())
+  name   String
+  userId String
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repos SavedRepoTag[]
+
+  // Tag names are unique per user; orphaned tags are pruned in the action layer
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model SavedRepoTag {
+  savedRepoId String
+  tagId       String
+
+  savedRepo SavedRepo @relation(fields: [savedRepoId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([savedRepoId, tagId])
+  @@index([tagId])
+}
