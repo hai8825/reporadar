@@ -7,57 +7,36 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import {
+  addRepoTag,
+  createFolder as createFolderAction,
+  deleteFolder as deleteFolderAction,
+  getSavedState,
+  removeRepoTag,
+  renameFolder as renameFolderAction,
+  type SavedState,
+  setRepoFolder as setRepoFolderAction,
+  toggleSaveRepo,
+} from "@/app/actions/saved-repos";
 import type { SavedRepo } from "@/lib/types";
+import { normalizeTag } from "@/lib/utils/tags";
 
-// Saved repos live in ONE context so every consumer (cards, detail page,
-// collection) sees the same state instantly — per-hook localStorage reads
-// caused unsaves in one component to go unnoticed in another.
-//
-// Two storage keys per user: the saved repos themselves, and the list of
-// folder names (kept separately so empty folders can exist).
-
-const savedKey = (userId: string) => `reporadar:saved:${userId}`;
-const foldersKey = (userId: string) => `reporadar:folders:${userId}`;
-
-const readSaved = (userId: string): SavedRepo[] => {
-  try {
-    const raw = window.localStorage.getItem(savedKey(userId));
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Array<Partial<SavedRepo>>;
-    // Migrate entries from before tags/folders existed
-    return parsed
-      .filter((r): r is SavedRepo & Partial<SavedRepo> =>
-        Boolean(r.id && r.nameWithOwner && r.savedAt),
-      )
-      .map((r) => ({ ...r, tags: r.tags ?? [], folder: r.folder ?? null }));
-  } catch {
-    // Corrupt JSON or storage disabled — treat as empty rather than crash
-    return [];
-  }
-};
-
-const readFolders = (userId: string): string[] => {
-  try {
-    const raw = window.localStorage.getItem(foldersKey(userId));
-    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
-    return Array.isArray(parsed) ? parsed.filter((f) => typeof f === "string") : [];
-  } catch {
-    return [];
-  }
-};
-
-// Normalize freeform tag input: trim, collapse whitespace to dashes, lowercase
-export const normalizeTag = (tag: string): string =>
-  tag.trim().toLowerCase().replace(/\s+/g, "-");
+// Saved repos now persist in Postgres via Server Actions, but the context keeps
+// the exact same public API it had over localStorage — so every consumer (cards,
+// detail page, collection) is unchanged. Mutations apply an optimistic update
+// for instant feedback, then reconcile to the authoritative state the action
+// returns. Calls are chained so the server sees them in order and the final
+// snapshot reflects every write.
 
 type SavedReposContextValue = {
   saved: SavedRepo[]; // sorted most recently saved first
   savedIds: string[];
   allTags: string[]; // distinct tags across the collection, sorted
   folders: string[]; // user-created folder names, in creation order
-  isReady: boolean; // false until localStorage has been read on the client
+  isReady: boolean; // false until the first server load resolves
   isSaved: (id: string) => boolean;
   toggleSave: (repo: { id: string; nameWithOwner: string }) => void;
   addTag: (repoId: string, tag: string) => void;
@@ -81,139 +60,162 @@ export const SavedReposProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { data: session } = useSession();
-  const userId = session?.user.id ?? "";
+  const { status } = useSession();
 
   const [saved, setSaved] = useState<SavedRepo[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [isReady, setIsReady] = useState(false);
 
-  // Hydrate once the session (and thus the storage keys) is known
+  const applyState = useCallback((state: SavedState) => {
+    setSaved(state.saved);
+    setFolders(state.folders);
+  }, []);
+
+  // Initial load once authenticated
   useEffect(() => {
-    if (!userId) return;
-    setSaved(readSaved(userId));
-    setFolders(readFolders(userId));
-    setIsReady(true);
-  }, [userId]);
-
-  // Single write path per key: every mutation persists synchronously
-  const mutateSaved = useCallback(
-    (update: (prev: SavedRepo[]) => SavedRepo[]) => {
-      if (!userId) return;
-      setSaved((prev) => {
-        const next = update(prev);
-        window.localStorage.setItem(savedKey(userId), JSON.stringify(next));
-        return next;
+    if (status !== "authenticated") return;
+    let active = true;
+    getSavedState()
+      .then((state) => {
+        if (active) applyState(state);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setIsReady(true);
       });
-    },
-    [userId],
-  );
+    return () => {
+      active = false;
+    };
+  }, [status, applyState]);
 
-  const mutateFolders = useCallback(
-    (update: (prev: string[]) => string[]) => {
-      if (!userId) return;
-      setFolders((prev) => {
-        const next = update(prev);
-        window.localStorage.setItem(foldersKey(userId), JSON.stringify(next));
-        return next;
-      });
+  // Serialize server actions so writes land in order; only the latest op's
+  // returned snapshot is applied (guards against out-of-order resolution).
+  const chain = useRef<Promise<unknown>>(Promise.resolve());
+  const opSeq = useRef(0);
+
+  const runMutation = useCallback(
+    (
+      optimistic: () => void,
+      action: () => Promise<SavedState>,
+    ) => {
+      optimistic();
+      const seq = ++opSeq.current;
+      chain.current = chain.current.then(
+        () =>
+          action().then((state) => {
+            if (seq === opSeq.current) applyState(state);
+          }),
+        // On failure, drop optimistic state and re-sync from the server
+        () => getSavedState().then(applyState).catch(() => {}),
+      );
     },
-    [userId],
+    [applyState],
   );
 
   const toggleSave = useCallback(
     (repo: { id: string; nameWithOwner: string }) =>
-      mutateSaved((prev) =>
-        prev.some((r) => r.id === repo.id)
-          ? prev.filter((r) => r.id !== repo.id)
-          : [
-              ...prev,
-              {
-                ...repo,
-                savedAt: new Date().toISOString(),
-                tags: [],
-                folder: null,
-              },
-            ],
+      runMutation(
+        () =>
+          setSaved((prev) =>
+            prev.some((r) => r.id === repo.id)
+              ? prev.filter((r) => r.id !== repo.id)
+              : [
+                  { ...repo, savedAt: new Date().toISOString(), tags: [], folder: null },
+                  ...prev,
+                ],
+          ),
+        () => toggleSaveRepo({ githubId: repo.id, nameWithOwner: repo.nameWithOwner }),
       ),
-    [mutateSaved],
+    [runMutation],
   );
 
   const addTag = useCallback(
-    (repoId: string, tag: string) => {
-      const normalized = normalizeTag(tag);
-      if (!normalized) return;
-      mutateSaved((prev) =>
-        prev.map((r) =>
-          r.id === repoId && !r.tags.includes(normalized)
-            ? { ...r, tags: [...r.tags, normalized] }
-            : r,
-        ),
+    (repoId: string, rawTag: string) => {
+      const tag = normalizeTag(rawTag);
+      if (!tag) return;
+      runMutation(
+        () =>
+          setSaved((prev) =>
+            prev.map((r) =>
+              r.id === repoId && !r.tags.includes(tag)
+                ? { ...r, tags: [...r.tags, tag] }
+                : r,
+            ),
+          ),
+        () => addRepoTag({ githubId: repoId, tag }),
       );
     },
-    [mutateSaved],
+    [runMutation],
   );
 
   const removeTag = useCallback(
-    (repoId: string, tag: string) =>
-      mutateSaved((prev) =>
-        prev.map((r) =>
-          r.id === repoId ? { ...r, tags: r.tags.filter((t) => t !== tag) } : r,
-        ),
-      ),
-    [mutateSaved],
+    (repoId: string, rawTag: string) => {
+      const tag = normalizeTag(rawTag);
+      runMutation(
+        () =>
+          setSaved((prev) =>
+            prev.map((r) =>
+              r.id === repoId ? { ...r, tags: r.tags.filter((t) => t !== tag) } : r,
+            ),
+          ),
+        () => removeRepoTag({ githubId: repoId, tag }),
+      );
+    },
+    [runMutation],
   );
 
   const createFolder = useCallback(
     (name: string) => {
       const trimmed = name.trim();
       if (!trimmed) return;
-      mutateFolders((prev) =>
-        prev.some((f) => f.toLowerCase() === trimmed.toLowerCase())
-          ? prev
-          : [...prev, trimmed],
+      runMutation(
+        () =>
+          setFolders((prev) =>
+            prev.some((f) => f.toLowerCase() === trimmed.toLowerCase())
+              ? prev
+              : [...prev, trimmed],
+          ),
+        () => createFolderAction({ name: trimmed }),
       );
     },
-    [mutateFolders],
+    [runMutation],
   );
 
-  // Rename keeps repos filed: the folder list entry and every repo's
-  // folder field move together. No-op when the target name is taken.
-  // Validates against current state up front — state updaters run during
-  // the re-render, so a cross-updater flag wouldn't be set in time.
   const renameFolder = useCallback(
     (from: string, to: string) => {
       const trimmed = to.trim();
-      if (!trimmed || trimmed === from || !folders.includes(from)) return;
-      const taken = folders.some(
-        (f) => f !== from && f.toLowerCase() === trimmed.toLowerCase(),
-      );
-      if (taken) return;
-      mutateFolders((prev) => prev.map((f) => (f === from ? trimmed : f)));
-      mutateSaved((prev) =>
-        prev.map((r) => (r.folder === from ? { ...r, folder: trimmed } : r)),
-      );
+      if (!trimmed || trimmed === from) return;
+      runMutation(() => {
+        setFolders((prev) => prev.map((f) => (f === from ? trimmed : f)));
+        setSaved((prev) =>
+          prev.map((r) => (r.folder === from ? { ...r, folder: trimmed } : r)),
+        );
+      }, () => renameFolderAction({ from, to: trimmed }));
     },
-    [folders, mutateFolders, mutateSaved],
+    [runMutation],
   );
 
-  // Deleting a folder unfiles its repos — it never unsaves them
   const deleteFolder = useCallback(
-    (name: string) => {
-      mutateFolders((prev) => prev.filter((f) => f !== name));
-      mutateSaved((prev) =>
-        prev.map((r) => (r.folder === name ? { ...r, folder: null } : r)),
-      );
-    },
-    [mutateFolders, mutateSaved],
+    (name: string) =>
+      runMutation(() => {
+        setFolders((prev) => prev.filter((f) => f !== name));
+        setSaved((prev) =>
+          prev.map((r) => (r.folder === name ? { ...r, folder: null } : r)),
+        );
+      }, () => deleteFolderAction({ name })),
+    [runMutation],
   );
 
   const setRepoFolder = useCallback(
     (repoId: string, folder: string | null) =>
-      mutateSaved((prev) =>
-        prev.map((r) => (r.id === repoId ? { ...r, folder } : r)),
+      runMutation(
+        () =>
+          setSaved((prev) =>
+            prev.map((r) => (r.id === repoId ? { ...r, folder } : r)),
+          ),
+        () => setRepoFolderAction({ githubId: repoId, folder }),
       ),
-    [mutateSaved],
+    [runMutation],
   );
 
   const value = useMemo<SavedReposContextValue>(() => {

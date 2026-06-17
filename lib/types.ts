@@ -94,7 +94,8 @@ export type ComparisonItem = {
   nameWithOwner: string;
 };
 
-// What we persist to localStorage for the saved collection
+// Client-facing shape of a saved repo (persisted in Postgres; the GitHub node
+// id is the client key). Mirrors the SavedState the server actions return.
 export type SavedRepo = {
   id: string;
   nameWithOwner: string;

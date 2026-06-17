@@ -28,7 +28,8 @@ export default function CollectionPage() {
   const [activeLevels, setActiveLevels] = useState<ActivityLevel[]>([]);
   const [activeFolder, setActiveFolder] = useState<string>(FOLDER_ALL);
 
-  // Batch-fetch live data for all saved IDs — never render stale localStorage fields
+  // Batch-fetch live GitHub data for all saved IDs — the DB only stores the id,
+  // name, tags and folder, so stars/activity/etc. always come fresh from GitHub
   const { data, loading, error } = useQuery(SAVED_REPOS, {
     variables: { ids: savedIds },
     skip: !isReady || savedIds.length === 0,
