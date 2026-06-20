@@ -13,6 +13,7 @@ import { useReportRateLimit } from "@/components/providers";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
 import { REPO_DETAIL } from "@/lib/graphql/queries";
 import { formatCount, formatDate, timeAgo } from "@/lib/utils/format";
+import { makeReadmeUrlTransform } from "@/lib/utils/readme";
 
 type RepoDetailClientProps = {
   owner: string;
@@ -54,6 +55,14 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
   const commits =
     repo.defaultBranchRef?.target?.history.nodes?.filter(Boolean) ?? [];
   const issues = repo.issues.nodes ?? [];
+
+  // READMEs are raw markdown — rewrite relative image/link paths to GitHub so
+  // they don't 404 against our origin (see makeReadmeUrlTransform).
+  const transformReadmeUrl = makeReadmeUrlTransform({
+    owner,
+    name,
+    branch: repo.defaultBranchRef?.name ?? "HEAD",
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -153,6 +162,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                urlTransform={transformReadmeUrl}
               >
                 {repo.readme.text}
               </ReactMarkdown>
