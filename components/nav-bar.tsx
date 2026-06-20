@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { AccountMenu } from "./account-menu";
 import { useRateLimit } from "./providers";
-import { ThemeSwitcher } from "./theme-switcher";
 import { formatDate } from "@/lib/utils/format";
 
 const NAV_LINKS = [
@@ -32,7 +31,6 @@ const RateLimitBadge = () => {
 
 export const NavBar = () => {
   const pathname = usePathname();
-  const { data: session } = useSession();
 
   // The login page stands alone — no chrome
   if (pathname === "/login") return null;
@@ -63,29 +61,7 @@ export const NavBar = () => {
 
         <div className="ml-auto flex items-center gap-3">
           <RateLimitBadge />
-          <ThemeSwitcher />
-          {session?.user && (
-            <>
-              <span className="hidden text-sm text-text-secondary sm:inline">
-                {session.user.login || session.user.name}
-              </span>
-              {session.user.image && (
-                // eslint-disable-next-line @next/next/no-img-element -- avatar from github, fixed size
-                <img
-                  src={session.user.image}
-                  alt=""
-                  className="h-7 w-7 rounded-full border border-accent-violet-border"
-                />
-              )}
-              <button
-                type="button"
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                className="text-sm text-text-muted hover:text-text-primary"
-              >
-                Sign out
-              </button>
-            </>
-          )}
+          <AccountMenu />
         </div>
       </nav>
     </header>
