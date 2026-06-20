@@ -3,7 +3,12 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { ComparisonTray } from "@/components/comparison-tray";
 import { NavBar } from "@/components/nav-bar";
 import { Providers } from "@/components/providers";
+import { DEFAULT_THEME, THEME_STORAGE_KEY } from "@/lib/themes";
 import "./globals.css";
+
+// Apply the saved theme before first paint so there's no flash of the default.
+// Runs synchronously in <head>, ahead of hydration.
+const noFlashThemeScript = `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');var ok=['deep-space','inked','frosted-aura','calcite'];if(t&&ok.indexOf(t)>-1){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -25,7 +30,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning: the inline script may change data-theme before
+    // React hydrates, which is expected and not a real mismatch.
+    <html lang="en" data-theme={DEFAULT_THEME} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
+      </head>
       <body
         className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       >

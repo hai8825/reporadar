@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useRateLimit } from "./providers";
+import { ThemeSwitcher } from "./theme-switcher";
 import { formatDate } from "@/lib/utils/format";
 
 const NAV_LINKS = [
@@ -62,6 +63,7 @@ export const NavBar = () => {
 
         <div className="ml-auto flex items-center gap-3">
           <RateLimitBadge />
+          <ThemeSwitcher />
           {session?.user && (
             <>
               <span className="hidden text-sm text-text-secondary sm:inline">
