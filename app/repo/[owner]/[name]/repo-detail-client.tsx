@@ -78,7 +78,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
             {isSaved(repo.id) ? "Saved" : "Save"}
           </button>
           {repo.isArchived && (
-            <span className="rounded-full border border-[#EF4444]/50 px-2.5 py-0.5 text-xs text-[#EF4444]">
+            <span className="rounded-full border border-activity-inactive/50 px-2.5 py-0.5 text-xs text-activity-inactive">
               Archived
             </span>
           )}

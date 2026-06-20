@@ -2,6 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme tokens ──────────────────────────────────────────────────────────
+   Colors are RGB channel triplets so Tailwind can apply opacity via
+   `rgb(var(--x) / <alpha-value>)`. :root holds the default (Deep space); each
+   [data-theme] block overrides. The activity ramp keeps its meaning across
+   themes (green→red) but shifts brighter on dark / deeper on light. */
+
+:root,
+[data-theme="deep-space"] {
+  color-scheme: dark;
+  --bg-primary: 13 17 23;
+  --bg-secondary: 22 27 37;
+  --bg-tertiary: 30 38 55;
+  --text-primary: 232 230 240;
+  --text-secondary: 156 163 175;
+  --text-muted: 107 114 128;
+  --accent: 123 92 240;
+  --accent-fg: 255 255 255;
+  --star: 245 158 11;
+  --activity-active: 34 197 94;
+  --activity-maintained: 234 179 8;
+  --activity-slow: 249 115 22;
+  --activity-inactive: 239 68 68;
+}
+
+[data-theme="inked"] {
+  color-scheme: dark;
+  --bg-primary: 14 18 19;
+  --bg-secondary: 23 28 30;
+  --bg-tertiary: 35 44 46;
+  --text-primary: 230 235 234;
+  --text-secondary: 148 163 160;
+  --text-muted: 107 118 114;
+  --accent: 45 212 191;
+  --accent-fg: 4 52 44;
+  --star: 245 158 11;
+  --activity-active: 34 197 94;
+  --activity-maintained: 234 179 8;
+  --activity-slow: 249 115 22;
+  --activity-inactive: 239 68 68;
+}
+
+[data-theme="frosted-aura"] {
+  color-scheme: light;
+  --bg-primary: 234 236 239;
+  --bg-secondary: 255 255 255;
+  --bg-tertiary: 242 244 247;
+  --text-primary: 30 36 48;
+  --text-secondary: 92 100 112;
+  --text-muted: 139 146 160;
+  --accent: 88 98 115;
+  --accent-fg: 255 255 255;
+  --star: 183 121 31;
+  --activity-active: 22 163 74;
+  --activity-maintained: 202 138 4;
+  --activity-slow: 234 88 12;
+  --activity-inactive: 220 38 38;
+}
+
+[data-theme="calcite"] {
+  color-scheme: light;
+  --bg-primary: 239 233 225;
+  --bg-secondary: 252 250 247;
+  --bg-tertiary: 244 239 232;
+  --text-primary: 42 36 29;
+  --text-secondary: 107 97 85;
+  --text-muted: 154 143 126;
+  --accent: 194 65 12;
+  --accent-fg: 255 255 255;
+  --star: 183 121 31;
+  --activity-active: 22 163 74;
+  --activity-maintained: 202 138 4;
+  --activity-slow: 234 88 12;
+  --activity-inactive: 220 38 38;
+}
+
 body {
   @apply bg-background-primary text-text-primary font-sans antialiased;
 }
@@ -49,15 +124,15 @@ body {
 }
 .readme-prose hr { @apply my-6 border-background-tertiary; }
 
-/* Minimal dark scrollbar to match the deep-space theme */
+/* Scrollbar tracks the active theme */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: rgb(var(--bg-primary));
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2637;
+  background: rgb(var(--bg-tertiary));
   border-radius: 5px;
 }

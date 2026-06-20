@@ -55,7 +55,7 @@ export const ComparisonTray = () => {
           {compareHref && (
             <Link
               href={compareHref}
-              className="rounded-md bg-accent-violet px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-violet/90"
+              className="rounded-md bg-accent-violet px-4 py-1.5 text-sm font-medium text-accent-fg hover:bg-accent-violet/90"
             >
               Compare
             </Link>
