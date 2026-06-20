@@ -108,7 +108,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
 
   if (isList) {
     return (
-      <article className="group flex min-w-0 flex-col gap-3 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary px-4 py-3 transition-colors hover:border-accent-violet/40 hover:bg-background-tertiary">
+      <article className="group flex min-w-0 flex-col gap-3 rounded-lg bg-background-secondary px-4 py-3 shadow-card transition-shadow hover:shadow-card-hover">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             {title}
@@ -128,7 +128,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
   }
 
   return (
-    <article className="group relative flex min-w-0 flex-col gap-3 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-4 transition-colors hover:border-accent-violet/40 hover:bg-background-tertiary">
+    <article className="group relative flex min-w-0 flex-col gap-3 rounded-lg bg-background-secondary p-4 shadow-card transition-shadow hover:shadow-card-hover">
       <div className="flex items-start justify-between gap-2">
         {title}
         {actions}

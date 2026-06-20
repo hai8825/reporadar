@@ -49,6 +49,12 @@ const config: Config = {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
       },
+      // Theme-aware card elevation (stronger on dark, softer on light) — see
+      // --card-shadow in globals.css. Used by borderless card surfaces.
+      boxShadow: {
+        card: "var(--card-shadow)",
+        "card-hover": "var(--card-shadow-hover)",
+      },
     },
   },
   plugins: [],

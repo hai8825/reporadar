@@ -24,6 +24,8 @@
   --activity-maintained: 234 179 8;
   --activity-slow: 249 115 22;
   --activity-inactive: 239 68 68;
+  --card-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 6px 16px rgb(0 0 0 / 0.3);
+  --card-shadow-hover: 0 4px 8px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.38);
 }
 
 [data-theme="inked"] {
@@ -41,6 +43,8 @@
   --activity-maintained: 234 179 8;
   --activity-slow: 249 115 22;
   --activity-inactive: 239 68 68;
+  --card-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 6px 16px rgb(0 0 0 / 0.3);
+  --card-shadow-hover: 0 4px 8px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.38);
 }
 
 [data-theme="frosted-aura"] {
@@ -58,6 +62,8 @@
   --activity-maintained: 202 138 4;
   --activity-slow: 234 88 12;
   --activity-inactive: 220 38 38;
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 3px 10px rgb(0 0 0 / 0.08);
+  --card-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.07), 0 6px 18px rgb(0 0 0 / 0.12);
 }
 
 [data-theme="calcite"] {
@@ -75,6 +81,8 @@
   --activity-maintained: 202 138 4;
   --activity-slow: 234 88 12;
   --activity-inactive: 220 38 38;
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 3px 10px rgb(0 0 0 / 0.08);
+  --card-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.07), 0 6px 18px rgb(0 0 0 / 0.12);
 }
 
 /* Ember — warm charcoal surfaces with a vivid orange accent. Cards (#3C4044)
@@ -96,6 +104,8 @@
   --activity-maintained: 234 179 8;
   --activity-slow: 234 88 12;
   --activity-inactive: 239 68 68;
+  --card-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 6px 16px rgb(0 0 0 / 0.3);
+  --card-shadow-hover: 0 4px 8px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.38);
 }
 
 body {

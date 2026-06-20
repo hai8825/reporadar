@@ -44,19 +44,31 @@ export const NavBar = () => {
         </Link>
 
         <div className="flex items-center gap-1">
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
-                pathname === href
-                  ? "bg-accent-violet-muted text-accent-violet"
-                  : "text-text-secondary hover:bg-background-tertiary hover:text-text-primary"
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
+          {NAV_LINKS.map(({ href, label }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={isActive ? "page" : undefined}
+                className={`relative rounded-md px-3 py-1.5 text-sm transition-colors ${
+                  isActive
+                    ? "font-medium text-text-primary"
+                    : "text-text-secondary hover:bg-background-tertiary hover:text-text-primary"
+                }`}
+              >
+                {label}
+                {/* Active tab marker — an accent underline instead of a fill,
+                    so it reads on every theme (no accent-on-accent) */}
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-accent-violet"
+                  />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="ml-auto flex items-center gap-3">

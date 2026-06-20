@@ -90,7 +90,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-4">
+    <div className="flex flex-col gap-4 rounded-lg bg-background-secondary p-4 shadow-card">
       <FilterRow label="Language">
         {LANGUAGE_OPTIONS.map((lang) => (
           <Chip key={lang} active={filters.languages.includes(lang)} onClick={() => toggleLanguage(lang)}>
