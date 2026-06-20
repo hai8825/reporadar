@@ -20,6 +20,7 @@ export const THEMES: ThemeOption[] = [
   { id: "inked", label: "Inked", mode: "dark", swatch: { bg: "#0E1213", accent: "#2DD4BF" } },
   { id: "frosted-aura", label: "Frosted aura", mode: "light", swatch: { bg: "#EAECEF", accent: "#586273" } },
   { id: "calcite", label: "Calcite", mode: "light", swatch: { bg: "#EFE9E1", accent: "#C2410C" } },
+  { id: "ember", label: "Ember", mode: "dark", swatch: { bg: "#26292C", accent: "#F97316" } },
 ];
 
 export const DEFAULT_THEME = "deep-space";

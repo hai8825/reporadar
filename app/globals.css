@@ -77,6 +77,27 @@
   --activity-inactive: 220 38 38;
 }
 
+/* Ember — warm charcoal surfaces with a vivid orange accent. Cards (#3C4044)
+   sit one step lighter than the canvas (#26292C); orange (#F97316) carries the
+   brand, buttons, and tags. Activity "slow" is nudged deeper (#EA580C) so it
+   doesn't read as the accent. */
+[data-theme="ember"] {
+  color-scheme: dark;
+  --bg-primary: 38 41 44;
+  --bg-secondary: 60 64 68;
+  --bg-tertiary: 77 81 85;
+  --text-primary: 236 235 234;
+  --text-secondary: 174 176 178;
+  --text-muted: 133 136 139;
+  --accent: 249 115 22;
+  --accent-fg: 42 22 6;
+  --star: 224 163 62;
+  --activity-active: 34 197 94;
+  --activity-maintained: 234 179 8;
+  --activity-slow: 234 88 12;
+  --activity-inactive: 239 68 68;
+}
+
 body {
   @apply bg-background-primary text-text-primary font-sans antialiased;
 }

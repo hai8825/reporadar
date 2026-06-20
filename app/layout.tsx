@@ -3,12 +3,15 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { ComparisonTray } from "@/components/comparison-tray";
 import { NavBar } from "@/components/nav-bar";
 import { Providers } from "@/components/providers";
-import { DEFAULT_THEME, THEME_STORAGE_KEY } from "@/lib/themes";
+import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES } from "@/lib/themes";
 import "./globals.css";
 
 // Apply the saved theme before first paint so there's no flash of the default.
-// Runs synchronously in <head>, ahead of hydration.
-const noFlashThemeScript = `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');var ok=['deep-space','inked','frosted-aura','calcite'];if(t&&ok.indexOf(t)>-1){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
+// Runs synchronously in <head>, ahead of hydration. The allow-list is derived
+// from THEMES so it can't drift when a theme is added.
+const noFlashThemeScript = `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');var ok=${JSON.stringify(
+  THEMES.map((t) => t.id),
+)};if(t&&ok.indexOf(t)>-1){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
