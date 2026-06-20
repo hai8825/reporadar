@@ -140,7 +140,7 @@ export const CompareClient = () => {
   }
   if (loading) {
     return (
-      <div className="h-96 animate-pulse rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary" />
+      <div className="h-96 animate-pulse rounded-lg bg-background-secondary shadow-card" />
     );
   }
   if (error) return <CompareMessage>GitHub error: {error.message}</CompareMessage>;
@@ -159,7 +159,7 @@ export const CompareClient = () => {
     <div className="flex flex-col gap-6">
       <h1 className="font-display text-2xl text-text-primary">Compare</h1>
 
-      <div className="overflow-x-auto rounded-lg border-[0.5px] border-accent-violet-border">
+      <div className="overflow-x-auto rounded-lg shadow-card">
         <table className="w-full border-collapse bg-background-secondary text-sm">
           <thead>
             <tr className="border-b border-accent-violet-border">

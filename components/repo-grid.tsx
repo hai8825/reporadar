@@ -34,7 +34,7 @@ export const RepoGrid = ({
         {Array.from({ length: 6 }, (_, i) => (
           <div
             key={i}
-            className={`animate-pulse rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary ${
+            className={`animate-pulse rounded-lg bg-background-secondary shadow-card ${
               view === "list" ? "h-16" : "h-36"
             }`}
           />
@@ -45,7 +45,7 @@ export const RepoGrid = ({
 
   if (error) {
     return (
-      <div className="rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-8 text-center">
+      <div className="rounded-lg bg-background-secondary p-8 text-center shadow-card">
         <p className="text-sm text-text-secondary">Something went wrong talking to GitHub.</p>
         <p className="mt-2 font-mono text-xs text-text-muted">{error.message}</p>
       </div>
@@ -54,7 +54,7 @@ export const RepoGrid = ({
 
   if (repos.length === 0) {
     return (
-      <div className="rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-12 text-center">
+      <div className="rounded-lg bg-background-secondary p-12 text-center shadow-card">
         <p className="text-sm text-text-secondary">{emptyMessage}</p>
       </div>
     );

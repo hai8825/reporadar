@@ -152,7 +152,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* README */}
-        <section className="min-w-0 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-6">
+        <section className="min-w-0 rounded-lg bg-background-secondary p-6 shadow-card">
           <h2 className="mb-4 font-display text-lg text-text-primary">README</h2>
           {repo.readme?.text ? (
             <div className="readme-prose text-sm leading-relaxed text-text-secondary">
@@ -174,7 +174,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
 
         <aside className="flex flex-col gap-6">
           {/* Recent commits */}
-          <section className="rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-5">
+          <section className="rounded-lg bg-background-secondary p-5 shadow-card">
             <h2 className="mb-3 font-display text-base text-text-primary">
               Recent commits
             </h2>
@@ -202,7 +202,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
           </section>
 
           {/* Open issues */}
-          <section className="rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary p-5">
+          <section className="rounded-lg bg-background-secondary p-5 shadow-card">
             <h2 className="mb-3 font-display text-base text-text-primary">Open issues</h2>
             {issues.length === 0 ? (
               <p className="text-sm text-text-muted">No open issues. Suspiciously tidy.</p>
@@ -234,7 +234,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
 };
 
 const StatCard = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="flex min-w-[7rem] flex-col gap-1 rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary px-4 py-3">
+  <div className="flex min-w-[7rem] flex-col gap-1 rounded-lg bg-background-secondary px-4 py-3 shadow-card">
     <span className="text-xs uppercase tracking-wide text-text-muted">{label}</span>
     <span className="font-mono text-lg text-text-primary">{value}</span>
   </div>
