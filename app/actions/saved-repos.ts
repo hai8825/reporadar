@@ -25,6 +25,14 @@ const folderName = z.string().min(1).max(100);
 const requireUserId = async (): Promise<string> => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) throw new Error("Not authenticated");
+  // A JWT can outlive its User row (e.g. the dev DB was reset). Verify the row
+  // still exists so a write fails with a clear signal rather than a raw foreign
+  // key violation — the client treats this as a stale session and re-auths.
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+  if (!user) throw new Error("Session is no longer valid. Please sign in again.");
   return session.user.id;
 };
 
@@ -58,8 +66,22 @@ const loadState = async (userId: string): Promise<SavedState> => {
   };
 };
 
-export const getSavedState = async (): Promise<SavedState> =>
-  loadState(await requireUserId());
+// Read path is tolerant: a stale JWT (user row gone) resolves to empty state
+// with a `staleSession` flag instead of throwing, so the client can sign out
+// and re-auth gracefully on load rather than crash.
+export const getSavedState = async (): Promise<
+  SavedState & { staleSession?: boolean }
+> => {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) return { saved: [], folders: [] };
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+  if (!user) return { saved: [], folders: [], staleSession: true };
+  return loadState(userId);
+};
 
 export const toggleSaveRepo = async (input: {
   githubId: string;

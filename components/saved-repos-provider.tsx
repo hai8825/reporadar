@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import {
   createContext,
   useCallback,
@@ -71,13 +71,26 @@ export const SavedReposProvider = ({
     setFolders(state.folders);
   }, []);
 
+  // Apply a server snapshot, but if it reports a stale session (JWT outlived its
+  // User row, e.g. the DB was reset) sign out so a fresh, valid session is issued.
+  const reconcile = useCallback(
+    (state: SavedState & { staleSession?: boolean }) => {
+      if (state.staleSession) {
+        signOut({ callbackUrl: "/login" });
+        return;
+      }
+      applyState(state);
+    },
+    [applyState],
+  );
+
   // Initial load once authenticated
   useEffect(() => {
     if (status !== "authenticated") return;
     let active = true;
     getSavedState()
       .then((state) => {
-        if (active) applyState(state);
+        if (active) reconcile(state);
       })
       .catch(() => {})
       .finally(() => {
@@ -86,7 +99,7 @@ export const SavedReposProvider = ({
     return () => {
       active = false;
     };
-  }, [status, applyState]);
+  }, [status, reconcile]);
 
   // Serialize server actions so writes land in order; only the latest op's
   // returned snapshot is applied (guards against out-of-order resolution).
@@ -105,11 +118,12 @@ export const SavedReposProvider = ({
           action().then((state) => {
             if (seq === opSeq.current) applyState(state);
           }),
-        // On failure, drop optimistic state and re-sync from the server
-        () => getSavedState().then(applyState).catch(() => {}),
+        // On failure (incl. a stale session), drop optimistic state and re-sync;
+        // reconcile() signs out if the server reports the session is stale.
+        () => getSavedState().then(reconcile).catch(() => {}),
       );
     },
-    [applyState],
+    [applyState, reconcile],
   );
 
   const toggleSave = useCallback(
