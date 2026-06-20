@@ -93,7 +93,7 @@ export const AccountMenu = () => {
       />
     ) : (
       <span
-        className={`${size} flex items-center justify-center rounded-full border border-accent-violet-border bg-accent-violet-muted text-xs text-accent-violet`}
+        className={`${size} flex items-center justify-center rounded-full border border-accent-violet-border bg-accent-violet-muted text-xs text-accent-chip`}
       >
         {initials}
       </span>

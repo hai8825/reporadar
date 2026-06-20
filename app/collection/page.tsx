@@ -138,7 +138,7 @@ export default function CollectionPage() {
                 aria-pressed={activeTags.includes(tag)}
                 className={`rounded-full border px-3 py-1 text-xs transition-colors ${
                   activeTags.includes(tag)
-                    ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+                    ? "border-accent-violet bg-accent-violet-muted text-accent-chip"
                     : "border-background-tertiary text-text-secondary hover:border-text-muted"
                 }`}
               >
@@ -161,7 +161,7 @@ export default function CollectionPage() {
             aria-pressed={activeLevels.includes(value)}
             className={`rounded-full border px-3 py-1 text-xs transition-colors ${
               activeLevels.includes(value)
-                ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+                ? "border-accent-violet bg-accent-violet-muted text-accent-chip"
                 : "border-background-tertiary text-text-secondary hover:border-text-muted"
             }`}
           >

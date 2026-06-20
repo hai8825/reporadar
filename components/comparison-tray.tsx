@@ -26,7 +26,7 @@ export const ComparisonTray = () => {
         {staged.map((item) => (
           <span
             key={item.id}
-            className="inline-flex items-center gap-2 rounded-full border border-accent-violet-border bg-accent-violet-muted px-3 py-1 text-sm text-accent-violet"
+            className="inline-flex items-center gap-2 rounded-full border border-accent-violet-border bg-accent-violet-muted px-3 py-1 text-sm text-accent-chip"
           >
             {item.nameWithOwner}
             <button

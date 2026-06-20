@@ -96,7 +96,7 @@ const ROWS: Row[] = [
           {topics.map((t) => (
             <span
               key={t}
-              className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-xs text-accent-violet"
+              className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-xs text-accent-chip"
             >
               {t}
             </span>

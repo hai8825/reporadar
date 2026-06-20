@@ -54,7 +54,7 @@ const Chip = ({ active, onClick, children }: ChipProps) => (
     aria-pressed={active}
     className={`rounded-full border px-3 py-1 text-xs transition-colors ${
       active
-        ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+        ? "border-accent-violet bg-accent-violet-muted text-accent-chip"
         : "border-background-tertiary text-text-secondary hover:border-text-muted"
     }`}
   >
@@ -157,7 +157,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
         {filters.topics.map((topic) => (
           <span
             key={topic}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent-violet bg-accent-violet-muted px-3 py-1 text-xs text-accent-violet"
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent-violet bg-accent-violet-muted px-3 py-1 text-xs text-accent-chip"
           >
             {topic}
             <button

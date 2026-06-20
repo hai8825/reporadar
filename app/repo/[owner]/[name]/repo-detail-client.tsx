@@ -79,7 +79,7 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
             aria-pressed={isSaved(repo.id)}
             className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs transition-colors ${
               isSaved(repo.id)
-                ? "border-accent-violet bg-accent-violet-muted text-accent-violet"
+                ? "border-accent-violet bg-accent-violet-muted text-accent-chip"
                 : "border-background-tertiary text-text-secondary hover:border-accent-violet-border hover:text-accent-violet"
             }`}
           >

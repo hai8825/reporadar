@@ -59,7 +59,7 @@ export const SavedRepoTools = ({ repoId }: SavedRepoToolsProps) => {
       {entry.tags.map((tag) => (
         <span
           key={tag}
-          className="inline-flex items-center gap-1 rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-xs text-accent-violet"
+          className="inline-flex items-center gap-1 rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-xs text-accent-chip"
         >
           {tag}
           <button

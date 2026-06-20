@@ -21,7 +21,7 @@ const RateLimitBadge = () => {
 
   return (
     <span
-      className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2.5 py-1 font-mono text-xs text-accent-violet"
+      className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2.5 py-1 font-mono text-xs text-accent-chip"
       title={`Rate limit resets ${formatDate(rateLimit.resetAt)}`}
     >
       {rateLimit.remaining} API calls left

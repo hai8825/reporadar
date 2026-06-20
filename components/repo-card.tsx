@@ -42,7 +42,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
         title={!staged && !canStage ? "Two repos already selected" : "Compare"}
         className={`rounded p-1.5 transition-opacity focus-visible:opacity-100 ${
           staged
-            ? "bg-accent-violet-muted text-accent-violet opacity-100"
+            ? "bg-accent-violet-muted text-accent-chip opacity-100"
             : "text-text-muted opacity-0 hover:text-accent-violet group-hover:opacity-100 disabled:cursor-not-allowed disabled:hover:text-text-muted"
         }`}
       >
@@ -90,7 +90,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
       <ActivityBadge pushedAt={repo.pushedAt} isArchived={repo.isArchived} />
 
       {isBeginnerFriendly && (
-        <span className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-accent-violet">
+        <span className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-accent-chip">
           beginner friendly
         </span>
       )}
