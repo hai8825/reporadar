@@ -36,6 +36,8 @@ const config: Config = {
           secondary: withAlpha("--text-secondary"),
           muted: withAlpha("--text-muted"),
         },
+        // Repo-card topics — neutral on most themes, muted ember on Ember
+        topic: withAlpha("--topic"),
         // Activity ramp — semantically fixed (green→red), but tuned per theme
         // for contrast (brighter on dark, deeper on light)
         activity: {

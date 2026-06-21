@@ -109,7 +109,8 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
     >
       <span className="break-words">
         {ownerPart && <span className="text-text-muted">{ownerPart}</span>}
-        <span className="text-accent-chip">{namePart}</span>
+        {/* Repo name in the full accent — matches the "Radar" wordmark */}
+        <span className="text-accent-violet">{namePart}</span>
       </span>
     </Link>
   );
@@ -120,7 +121,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
     .slice(0, 4);
   const topicLine =
     topicNames.length > 0 ? (
-      <p className="truncate text-xs text-text-muted">{topicNames.join(" · ")}</p>
+      <p className="truncate text-xs text-topic">{topicNames.join(" · ")}</p>
     ) : null;
 
   if (isList) {
