@@ -54,7 +54,7 @@ const Chip = ({ active, onClick, children }: ChipProps) => (
     aria-pressed={active}
     className={`rounded-full border px-3 py-1 text-xs transition-colors ${
       active
-        ? "border-accent-violet bg-accent-violet font-medium text-accent-fg"
+        ? "border-accent-violet bg-background-primary font-medium text-accent-violet"
         : "border-background-tertiary text-text-secondary hover:border-text-muted"
     }`}
   >

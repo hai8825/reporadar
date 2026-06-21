@@ -77,7 +77,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
         </span>
       )}
 
-      <span className="inline-flex items-center gap-1 font-mono text-accent-amber">
+      <span className="inline-flex items-center gap-1 font-mono font-medium text-accent-amber">
         <StarIcon className="h-3.5 w-3.5" />
         {formatCount(repo.stargazerCount)}
       </span>
@@ -97,14 +97,31 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
     </div>
   );
 
+  // Dim the owner, keep the repo name in ember (the readable accent-chip tone)
+  const slash = repo.nameWithOwner.indexOf("/");
+  const ownerPart = slash >= 0 ? repo.nameWithOwner.slice(0, slash + 1) : "";
+  const namePart = slash >= 0 ? repo.nameWithOwner.slice(slash + 1) : repo.nameWithOwner;
+
   const title = (
     <Link
       href={`/repo/${repo.nameWithOwner}`}
-      className="min-w-0 font-display text-base font-medium text-text-primary hover:text-accent-violet"
+      className="min-w-0 font-display text-base font-medium hover:underline"
     >
-      <span className="break-words">{repo.nameWithOwner}</span>
+      <span className="break-words">
+        {ownerPart && <span className="text-text-muted">{ownerPart}</span>}
+        <span className="text-accent-chip">{namePart}</span>
+      </span>
     </Link>
   );
+
+  // Topics as a plain dot-separated line (not chips), muted so it reads as metadata
+  const topicNames = (repo.repositoryTopics.nodes ?? [])
+    .map((n) => n.topic.name)
+    .slice(0, 4);
+  const topicLine =
+    topicNames.length > 0 ? (
+      <p className="truncate text-xs text-text-muted">{topicNames.join(" · ")}</p>
+    ) : null;
 
   if (isList) {
     return (
@@ -117,6 +134,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
                 {repo.description}
               </p>
             )}
+            {topicLine}
           </div>
           <div className="hidden md:block">{meta}</div>
           {actions}
@@ -140,7 +158,10 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
         </p>
       )}
 
-      <div className="mt-auto">{meta}</div>
+      <div className="mt-auto flex flex-col gap-2">
+        {topicLine}
+        {meta}
+      </div>
 
       {savedTools && <SavedRepoTools repoId={repo.id} />}
     </article>
