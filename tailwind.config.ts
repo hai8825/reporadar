@@ -26,7 +26,6 @@ const config: Config = {
         accent: {
           violet: withAlpha("--accent"), // theme accent
           chip: withAlpha("--accent-chip"), // text on muted/selected chips (brighter where needed)
-          name: withAlpha("--accent-name"), // repo-card name (deep, readable accent)
           "violet-muted": "rgb(var(--accent) / 0.13)", // chip/badge fills
           "violet-border": "rgb(var(--accent) / 0.33)", // accented borders
           fg: withAlpha("--accent-fg"), // text/icon on a solid accent fill
@@ -37,8 +36,6 @@ const config: Config = {
           secondary: withAlpha("--text-secondary"),
           muted: withAlpha("--text-muted"),
         },
-        // Repo-card topics — neutral on most themes, muted ember on Ember
-        topic: withAlpha("--topic"),
         // Activity ramp — semantically fixed (green→red), but tuned per theme
         // for contrast (brighter on dark, deeper on light)
         activity: {

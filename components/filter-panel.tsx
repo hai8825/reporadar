@@ -46,19 +46,26 @@ type ChipProps = {
   children: React.ReactNode;
 };
 
-// Pill-shaped filter chip per the design rules
+// Pill-shaped filter chip. Selected state is marked by an ember accent bar
+// underneath — the same active-marker the nav links use — instead of a fill.
 const Chip = ({ active, onClick, children }: ChipProps) => (
   <button
     type="button"
     onClick={onClick}
     aria-pressed={active}
-    className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+    className={`relative rounded-full border px-3 py-1 text-xs transition-colors ${
       active
-        ? "border-accent-violet bg-background-primary font-medium text-accent-violet"
+        ? "border-background-tertiary font-medium text-text-primary"
         : "border-background-tertiary text-text-secondary hover:border-text-muted"
     }`}
   >
     {children}
+    {active && (
+      <span
+        aria-hidden
+        className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-accent-violet"
+      />
+    )}
   </button>
 );
 

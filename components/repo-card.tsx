@@ -102,26 +102,37 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
   const ownerPart = slash >= 0 ? repo.nameWithOwner.slice(0, slash + 1) : "";
   const namePart = slash >= 0 ? repo.nameWithOwner.slice(slash + 1) : repo.nameWithOwner;
 
+  // White name, ember on hover — ember stays an accent, not a static title color
   const title = (
     <Link
       href={`/repo/${repo.nameWithOwner}`}
-      className="min-w-0 font-display text-base font-medium hover:underline"
+      className="group/repo min-w-0 font-display text-base font-medium"
     >
       <span className="break-words">
         {ownerPart && <span className="text-text-muted">{ownerPart}</span>}
-        {/* Repo name in the deep, readable accent (Ember-tuned via --accent-name) */}
-        <span className="text-accent-name">{namePart}</span>
+        <span className="text-text-primary transition-colors group-hover/repo:text-accent-violet">
+          {namePart}
+        </span>
       </span>
     </Link>
   );
 
-  // Topics as a plain dot-separated line (not chips), muted so it reads as metadata
+  // Topics as neutral outline chips, echoing the resting filter chips
   const topicNames = (repo.repositoryTopics.nodes ?? [])
     .map((n) => n.topic.name)
     .slice(0, 4);
   const topicLine =
     topicNames.length > 0 ? (
-      <p className="truncate text-xs text-topic">{topicNames.join(" · ")}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {topicNames.map((t) => (
+          <span
+            key={t}
+            className="rounded-full border border-background-tertiary px-2 py-0.5 text-[10px] text-text-secondary"
+          >
+            {t}
+          </span>
+        ))}
+      </div>
     ) : null;
 
   if (isList) {
