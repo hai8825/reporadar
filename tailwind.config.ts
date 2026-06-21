@@ -26,6 +26,7 @@ const config: Config = {
         accent: {
           violet: withAlpha("--accent"), // theme accent
           chip: withAlpha("--accent-chip"), // text on muted/selected chips (brighter where needed)
+          name: withAlpha("--accent-name"), // repo-card name (deep, readable accent)
           "violet-muted": "rgb(var(--accent) / 0.13)", // chip/badge fills
           "violet-border": "rgb(var(--accent) / 0.33)", // accented borders
           fg: withAlpha("--accent-fg"), // text/icon on a solid accent fill

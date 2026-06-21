@@ -109,8 +109,8 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
     >
       <span className="break-words">
         {ownerPart && <span className="text-text-muted">{ownerPart}</span>}
-        {/* Repo name in the full accent — matches the "Radar" wordmark */}
-        <span className="text-accent-violet">{namePart}</span>
+        {/* Repo name in the deep, readable accent (Ember-tuned via --accent-name) */}
+        <span className="text-accent-name">{namePart}</span>
       </span>
     </Link>
   );

@@ -19,6 +19,7 @@
   --text-muted: 107 114 128;
   --accent: 123 92 240;
   --accent-chip: 123 92 240;
+  --accent-name: 123 92 240;
   --accent-fg: 255 255 255;
   --topic: 156 163 175;
   --star: 245 158 11;
@@ -40,6 +41,7 @@
   --text-muted: 107 118 114;
   --accent: 45 212 191;
   --accent-chip: 45 212 191;
+  --accent-name: 45 212 191;
   --accent-fg: 4 52 44;
   --topic: 148 163 160;
   --star: 245 158 11;
@@ -61,6 +63,7 @@
   --text-muted: 139 146 160;
   --accent: 88 98 115;
   --accent-chip: 88 98 115;
+  --accent-name: 88 98 115;
   --accent-fg: 255 255 255;
   --topic: 92 100 112;
   --star: 183 121 31;
@@ -82,6 +85,7 @@
   --text-muted: 154 143 126;
   --accent: 194 65 12;
   --accent-chip: 194 65 12;
+  --accent-name: 194 65 12;
   --accent-fg: 255 255 255;
   --topic: 107 97 85;
   --star: 183 121 31;
@@ -109,6 +113,9 @@
   /* Brighter than --accent so chip/selected text clears contrast on the
      orange-tinted muted fill (vivid orange-on-orange is too low) */
   --accent-chip: 251 185 125;
+  /* Deep ember for the repo name — saturated but readable (~4.6:1) on the card,
+     unlike the full accent which is too dim there */
+  --accent-name: 251 154 74;
   --accent-fg: 42 22 6;
   /* Muted ember — topics read as warm metadata under the ember repo name */
   --topic: 198 143 94;
