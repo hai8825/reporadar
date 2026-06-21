@@ -47,7 +47,7 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Search repos by name, description, or topic…"
         aria-label="Search repositories"
-        className="w-full rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-violet"
+        className="w-full rounded-lg bg-background-secondary py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted"
       />
     </div>
   );

@@ -118,7 +118,7 @@ export default function CollectionPage() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Filter saved repos by name or description…"
         aria-label="Filter saved repositories"
-        className="w-full rounded-lg border-[0.5px] border-accent-violet-border bg-background-secondary px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-violet"
+        className="w-full rounded-lg bg-background-secondary px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted"
       />
 
       {allTags.length > 0 && (

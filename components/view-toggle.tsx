@@ -40,7 +40,7 @@ export const ViewToggle = ({ mode, onChange }: ViewToggleProps) => (
         onClick={() => onChange(value)}
         className={`px-2.5 py-1.5 first:rounded-l-md last:rounded-r-md ${
           mode === value
-            ? "bg-accent-violet-muted text-accent-chip"
+            ? "bg-accent-violet text-accent-fg"
             : "text-text-muted hover:text-text-primary"
         }`}
       >

@@ -54,7 +54,7 @@ const Chip = ({ active, onClick, children }: ChipProps) => (
     aria-pressed={active}
     className={`rounded-full border px-3 py-1 text-xs transition-colors ${
       active
-        ? "border-accent-violet bg-accent-violet-muted text-accent-chip"
+        ? "border-accent-violet bg-accent-violet font-medium text-accent-fg"
         : "border-background-tertiary text-text-secondary hover:border-text-muted"
     }`}
   >
@@ -191,7 +191,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
 
 const FilterRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-wrap items-center gap-2">
-    <span className="w-28 shrink-0 text-xs font-medium uppercase tracking-wide text-text-muted">
+    <span className="w-28 shrink-0 text-xs font-medium uppercase tracking-wide text-text-secondary">
       {label}
     </span>
     {children}
