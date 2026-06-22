@@ -22,6 +22,7 @@ const config: Config = {
           primary: withAlpha("--bg-primary"),
           secondary: withAlpha("--bg-secondary"),
           tertiary: withAlpha("--bg-tertiary"),
+          band: withAlpha("--card-band"), // card header/footer band
         },
         accent: {
           violet: withAlpha("--accent"), // theme accent

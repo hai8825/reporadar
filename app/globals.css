@@ -21,10 +21,13 @@
   --accent-chip: 123 92 240;
   --accent-fg: 255 255 255;
   --star: 245 158 11;
-  --activity-active: 34 197 94;
-  --activity-maintained: 234 179 8;
-  --activity-slow: 249 115 22;
-  --activity-inactive: 239 68 68;
+  --card-band: 18 23 31;
+  /* Active = the theme accent (ember = active/selected/saved everywhere).
+     The rest are a distinct, accessible status palette. */
+  --activity-active: var(--accent);
+  --activity-maintained: 52 211 153;
+  --activity-slow: 251 191 36;
+  --activity-inactive: 168 162 158;
   --card-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 6px 16px rgb(0 0 0 / 0.3);
   --card-shadow-hover: 0 4px 8px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.38);
 }
@@ -41,10 +44,11 @@
   --accent-chip: 45 212 191;
   --accent-fg: 4 52 44;
   --star: 245 158 11;
-  --activity-active: 34 197 94;
-  --activity-maintained: 234 179 8;
-  --activity-slow: 249 115 22;
-  --activity-inactive: 239 68 68;
+  --card-band: 19 24 26;
+  --activity-active: var(--accent);
+  --activity-maintained: 132 204 22;
+  --activity-slow: 251 191 36;
+  --activity-inactive: 168 162 158;
   --card-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 6px 16px rgb(0 0 0 / 0.3);
   --card-shadow-hover: 0 4px 8px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.38);
 }
@@ -61,10 +65,11 @@
   --accent-chip: 88 98 115;
   --accent-fg: 255 255 255;
   --star: 183 121 31;
-  --activity-active: 22 163 74;
-  --activity-maintained: 202 138 4;
-  --activity-slow: 234 88 12;
-  --activity-inactive: 220 38 38;
+  --card-band: 244 245 248;
+  --activity-active: var(--accent);
+  --activity-maintained: 5 150 105;
+  --activity-slow: 202 138 4;
+  --activity-inactive: 120 113 108;
   --card-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 3px 10px rgb(0 0 0 / 0.08);
   --card-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.07), 0 6px 18px rgb(0 0 0 / 0.12);
 }
@@ -81,10 +86,11 @@
   --accent-chip: 194 65 12;
   --accent-fg: 255 255 255;
   --star: 183 121 31;
-  --activity-active: 22 163 74;
-  --activity-maintained: 202 138 4;
-  --activity-slow: 234 88 12;
-  --activity-inactive: 220 38 38;
+  --card-band: 246 242 236;
+  --activity-active: var(--accent);
+  --activity-maintained: 5 150 105;
+  --activity-slow: 202 138 4;
+  --activity-inactive: 120 113 108;
   --card-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 3px 10px rgb(0 0 0 / 0.08);
   --card-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.07), 0 6px 18px rgb(0 0 0 / 0.12);
 }
@@ -107,10 +113,13 @@
   --accent-chip: 251 185 125;
   --accent-fg: 42 22 6;
   --star: 224 163 62;
-  --activity-active: 34 197 94;
-  --activity-maintained: 234 179 8;
-  --activity-slow: 234 88 12;
-  --activity-inactive: 239 68 68;
+  /* Header/footer band — a grey lifted off the page so it reads as the card */
+  --card-band: 49 53 57;
+  /* Active = ember accent; the rest are a distinct, accessible status palette */
+  --activity-active: var(--accent);
+  --activity-maintained: 52 211 153;
+  --activity-slow: 251 191 36;
+  --activity-inactive: 168 162 158;
   --card-shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 6px 16px rgb(0 0 0 / 0.3);
   --card-shadow-hover: 0 4px 8px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.38);
 }
