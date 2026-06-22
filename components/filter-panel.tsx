@@ -40,30 +40,30 @@ const PUSHED_OPTIONS: Array<{ label: string; value: PushedPreset }> = [
 const starLabel = (preset: StarPreset): string =>
   preset >= 1000 ? `${preset / 1000}k+` : `${preset}+`;
 
-type ChipProps = {
+type FilterOptionProps = {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
 };
 
-// Pill-shaped filter chip. Selected state is marked by an ember accent bar
-// underneath — the same active-marker the nav links use — instead of a fill.
-const Chip = ({ active, onClick, children }: ChipProps) => (
+// Flat text option (no pill). Selected state is marked by an ember accent bar
+// underneath — the same active-marker the nav links use.
+const FilterOption = ({ active, onClick, children }: FilterOptionProps) => (
   <button
     type="button"
     onClick={onClick}
     aria-pressed={active}
-    className={`relative rounded-full border px-3 py-1 text-xs transition-colors ${
+    className={`relative pb-1 text-sm transition-colors ${
       active
-        ? "border-background-tertiary font-medium text-text-primary"
-        : "border-background-tertiary text-text-secondary hover:border-text-muted"
+        ? "font-medium text-text-primary"
+        : "text-text-secondary hover:text-text-primary"
     }`}
   >
     {children}
     {active && (
       <span
         aria-hidden
-        className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-accent-violet"
+        className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-accent-violet"
       />
     )}
   </button>
@@ -97,74 +97,74 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg bg-background-secondary p-4 shadow-card">
+    <div className="grid grid-cols-[8rem_1fr] overflow-hidden rounded-lg bg-background-secondary shadow-card">
       <FilterRow label="Language">
         {LANGUAGE_OPTIONS.map((lang) => (
-          <Chip key={lang} active={filters.languages.includes(lang)} onClick={() => toggleLanguage(lang)}>
+          <FilterOption key={lang} active={filters.languages.includes(lang)} onClick={() => toggleLanguage(lang)}>
             {lang}
-          </Chip>
+          </FilterOption>
         ))}
       </FilterRow>
 
       <FilterRow label="Minimum stars">
-        <Chip active={filters.minStars === null} onClick={() => set("minStars", null)}>
+        <FilterOption active={filters.minStars === null} onClick={() => set("minStars", null)}>
           Any
-        </Chip>
+        </FilterOption>
         {STAR_PRESETS.map((preset) => (
-          <Chip
+          <FilterOption
             key={preset}
             active={filters.minStars === preset}
             onClick={() => set("minStars", filters.minStars === preset ? null : preset)}
           >
             {starLabel(preset)}
-          </Chip>
+          </FilterOption>
         ))}
       </FilterRow>
 
       <FilterRow label="Last pushed">
-        <Chip active={filters.pushed === null} onClick={() => set("pushed", null)}>
+        <FilterOption active={filters.pushed === null} onClick={() => set("pushed", null)}>
           Any
-        </Chip>
+        </FilterOption>
         {PUSHED_OPTIONS.map(({ label, value }) => (
-          <Chip
+          <FilterOption
             key={value}
             active={filters.pushed === value}
             onClick={() => set("pushed", filters.pushed === value ? null : value)}
           >
             {label}
-          </Chip>
+          </FilterOption>
         ))}
       </FilterRow>
 
       <FilterRow label="License">
-        <Chip active={filters.license === null} onClick={() => set("license", null)}>
+        <FilterOption active={filters.license === null} onClick={() => set("license", null)}>
           Any
-        </Chip>
+        </FilterOption>
         {LICENSE_OPTIONS.map(({ label, value }) => (
-          <Chip
+          <FilterOption
             key={value}
             active={filters.license === value}
             onClick={() => set("license", filters.license === value ? null : value)}
           >
             {label}
-          </Chip>
+          </FilterOption>
         ))}
       </FilterRow>
 
       <FilterRow label="Beginner friendly">
-        <Chip
+        <FilterOption
           active={filters.beginnerFriendly}
           onClick={() => set("beginnerFriendly", !filters.beginnerFriendly)}
         >
           Has “good first issue”s
-        </Chip>
+        </FilterOption>
       </FilterRow>
 
       <FilterRow label="Topics">
         {filters.topics.map((topic) => (
           <span
             key={topic}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent-violet bg-accent-violet-muted px-3 py-1 text-xs text-accent-chip"
+            className="inline-flex items-center gap-1.5 rounded-full border border-background-tertiary px-3 py-1 text-xs text-text-secondary"
           >
             {topic}
             <button
@@ -196,11 +196,13 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
   );
 };
 
+// display:contents drops these two cells straight into the parent grid, so the
+// label cells line up into one continuous band down the left column.
 const FilterRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <span className="w-28 shrink-0 text-xs font-medium uppercase tracking-wide text-text-secondary">
+  <div className="contents">
+    <div className="flex items-center bg-background-band px-4 py-3 text-xs font-medium uppercase leading-tight tracking-wide text-text-primary">
       {label}
-    </span>
-    {children}
+    </div>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">{children}</div>
   </div>
 );
