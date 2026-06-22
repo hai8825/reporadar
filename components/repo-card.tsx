@@ -7,7 +7,7 @@ import type { RepoCardData } from "@/lib/types";
 import type { ViewMode } from "@/hooks/useViewMode";
 import { formatCount } from "@/lib/utils/format";
 import { ActivityBadge } from "./activity-badge";
-import { BookmarkIcon, CompareIcon, ForkIcon, StarIcon } from "./icons";
+import { BookmarkIcon, CompareIcon, ForkIcon, SparkleIcon, StarIcon } from "./icons";
 import { SavedRepoTools } from "./saved-repo-tools";
 
 type RepoCardProps = {
@@ -90,8 +90,9 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
       <ActivityBadge pushedAt={repo.pushedAt} isArchived={repo.isArchived} />
 
       {isBeginnerFriendly && (
-        <span className="rounded-full border border-accent-violet-border bg-accent-violet-muted px-2 py-0.5 text-accent-chip">
-          beginner friendly
+        <span className="inline-flex items-center gap-1 rounded-full border border-background-tertiary px-2 py-0.5 text-text-secondary">
+          <SparkleIcon className="h-3 w-3" />
+          good first issues
         </span>
       )}
     </div>
@@ -158,24 +159,26 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
   }
 
   return (
-    <article className="group relative flex min-w-0 flex-col gap-3 rounded-lg bg-background-secondary p-4 shadow-card transition-shadow hover:shadow-card-hover">
-      <div className="flex items-start justify-between gap-2">
-        {title}
-        {actions}
-      </div>
+    <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg bg-background-secondary shadow-card transition-shadow hover:shadow-card-hover">
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-2">
+          {title}
+          {actions}
+        </div>
 
-      {repo.description && (
-        <p className="line-clamp-2 break-words text-sm text-text-secondary">
-          {repo.description}
-        </p>
-      )}
+        {repo.description && (
+          <p className="line-clamp-2 break-words text-sm text-text-secondary">
+            {repo.description}
+          </p>
+        )}
 
-      <div className="mt-auto flex flex-col gap-2">
         {topicLine}
-        {meta}
+
+        {savedTools && <SavedRepoTools repoId={repo.id} />}
       </div>
 
-      {savedTools && <SavedRepoTools repoId={repo.id} />}
+      {/* Footer band — metadata on a grey lifted off the page */}
+      <div className="bg-background-band px-4 py-2.5">{meta}</div>
     </article>
   );
 };
