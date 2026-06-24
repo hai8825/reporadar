@@ -3,7 +3,15 @@
 import { useState } from "react";
 import type { PushedPreset, SearchFilters, StarPreset } from "@/lib/types";
 import { STAR_PRESETS } from "@/lib/types";
-import { CloseIcon } from "./icons";
+import {
+  ClockIcon,
+  CloseIcon,
+  CodeIcon,
+  LicenseIcon,
+  SparkleIcon,
+  StarIcon,
+  TagIcon,
+} from "./icons";
 
 // Curated language list — GitHub has hundreds; these cover the common cases
 const LANGUAGE_OPTIONS = [
@@ -97,8 +105,8 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
   };
 
   return (
-    <div className="grid grid-cols-[8rem_1fr] overflow-hidden rounded-lg bg-background-secondary shadow-card">
-      <FilterRow label="Language">
+    <div className="grid grid-cols-[9rem_1fr] overflow-hidden rounded-lg bg-background-secondary shadow-card">
+      <FilterRow label="Language" icon={<CodeIcon className="h-3.5 w-3.5 text-text-muted" />}>
         {LANGUAGE_OPTIONS.map((lang) => (
           <FilterOption key={lang} active={filters.languages.includes(lang)} onClick={() => toggleLanguage(lang)}>
             {lang}
@@ -106,7 +114,10 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
         ))}
       </FilterRow>
 
-      <FilterRow label="Minimum stars">
+      <FilterRow
+        label="Minimum stars"
+        icon={<StarIcon className="h-3.5 w-3.5 text-text-muted" />}
+      >
         <FilterOption active={filters.minStars === null} onClick={() => set("minStars", null)}>
           Any
         </FilterOption>
@@ -121,7 +132,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
         ))}
       </FilterRow>
 
-      <FilterRow label="Last pushed">
+      <FilterRow label="Last pushed" icon={<ClockIcon className="h-3.5 w-3.5 text-text-muted" />}>
         <FilterOption active={filters.pushed === null} onClick={() => set("pushed", null)}>
           Any
         </FilterOption>
@@ -136,7 +147,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
         ))}
       </FilterRow>
 
-      <FilterRow label="License">
+      <FilterRow label="License" icon={<LicenseIcon className="h-3.5 w-3.5 text-text-muted" />}>
         <FilterOption active={filters.license === null} onClick={() => set("license", null)}>
           Any
         </FilterOption>
@@ -151,7 +162,10 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
         ))}
       </FilterRow>
 
-      <FilterRow label="Beginner friendly">
+      <FilterRow
+        label="Beginner friendly"
+        icon={<SparkleIcon className="h-3.5 w-3.5 text-text-muted" />}
+      >
         <FilterOption
           active={filters.beginnerFriendly}
           onClick={() => set("beginnerFriendly", !filters.beginnerFriendly)}
@@ -160,7 +174,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
         </FilterOption>
       </FilterRow>
 
-      <FilterRow label="Topics">
+      <FilterRow label="Topics" icon={<TagIcon className="h-3.5 w-3.5 text-text-muted" />}>
         {filters.topics.map((topic) => (
           <span
             key={topic}
@@ -198,9 +212,18 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
 
 // display:contents drops these two cells straight into the parent grid, so the
 // label cells line up into one continuous band down the left column.
-const FilterRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const FilterRow = ({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) => (
   <div className="contents">
-    <div className="flex items-center bg-background-band px-4 py-3 text-xs font-medium uppercase leading-tight tracking-wide text-text-primary">
+    <div className="flex items-center gap-2 bg-background-band px-4 py-3 text-xs font-medium uppercase leading-tight tracking-wide text-text-primary">
+      <span className="shrink-0">{icon}</span>
       {label}
     </div>
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">{children}</div>
