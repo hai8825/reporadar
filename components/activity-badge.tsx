@@ -6,8 +6,10 @@ type ActivityBadgeProps = {
   isArchived: boolean;
 };
 
-// White label + a color-coded dot for the status. The ramp is defined per
-// theme in globals.css (Active = the accent / ember).
+// White label + a colour-coded dot. Coloured label text fails AA on the lighter
+// card body (list view) and in the violet default theme, so the colour lives in
+// graphical elements — this dot and the card's status cap — while the word stays
+// white. Ramp is defined per theme in globals.css.
 const DOT_CLASS: Record<ActivityLevel, string> = {
   active: "bg-activity-active",
   maintained: "bg-activity-maintained",

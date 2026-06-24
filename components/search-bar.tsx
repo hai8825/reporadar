@@ -29,10 +29,11 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative rounded-lg focus-within:ring-2 focus-within:ring-accent-violet">
+      {/* Ember search glyph — puts the accent at the top of the viewport */}
       <svg
         viewBox="0 0 16 16"
-        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-accent-violet"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
@@ -47,7 +48,7 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Search repos by name, description, or topic…"
         aria-label="Search repositories"
-        className="w-full rounded-lg bg-background-secondary py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-muted"
+        className="w-full rounded-lg bg-background-secondary py-2.5 pl-10 pr-4 text-sm text-text-primary outline-none placeholder:text-text-muted"
       />
     </div>
   );

@@ -112,9 +112,12 @@
      orange-tinted muted fill (vivid orange-on-orange is too low) */
   --accent-chip: 251 185 125;
   --accent-fg: 42 22 6;
-  --star: 224 163 62;
-  /* Header/footer band — a grey lifted off the page so it reads as the card */
-  --card-band: 49 53 57;
+  /* Warm gold pulled toward ember's hue so the most-repeated card element
+     (the star) reads as part of the ember family, not a competing gold */
+  --star: 232 134 46;
+  /* Header/footer band — darkened a notch so the ember status label clears
+     4.5:1 text contrast and the warm star pops harder */
+  --card-band: 45 48 51;
   /* Active = ember accent; the rest are a distinct, accessible status palette */
   --activity-active: var(--accent);
   --activity-maintained: 52 211 153;

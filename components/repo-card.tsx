@@ -6,9 +6,19 @@ import { useSavedRepos } from "@/hooks/useSavedRepos";
 import type { RepoCardData } from "@/lib/types";
 import type { ViewMode } from "@/hooks/useViewMode";
 import { formatCount } from "@/lib/utils/format";
+import { type ActivityLevel, getActivityLevel } from "@/lib/utils/activity";
 import { ActivityBadge } from "./activity-badge";
 import { BookmarkIcon, CompareIcon, ForkIcon, SparkleIcon, StarIcon } from "./icons";
 import { SavedRepoTools } from "./saved-repo-tools";
+
+// Status-coloured cap on each card — doubles as the brand signal (active repos
+// dominate listings, so most caps render ember) and a quick status read.
+const CAP_CLASS: Record<ActivityLevel, string> = {
+  active: "bg-activity-active",
+  maintained: "bg-activity-maintained",
+  slow: "bg-activity-slow",
+  inactive: "bg-activity-inactive",
+};
 
 type RepoCardProps = {
   repo: RepoCardData;
@@ -25,6 +35,7 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
   const staged = isStaged(repo.id);
   const isBeginnerFriendly = repo.goodFirstIssues.totalCount > 0;
   const isList = view === "list";
+  const cap = CAP_CLASS[getActivityLevel(repo.pushedAt, repo.isArchived).level];
 
   const actions = (
     <div className="flex shrink-0 items-center gap-1">
@@ -138,28 +149,34 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
 
   if (isList) {
     return (
-      <article className="group flex min-w-0 flex-col gap-3 rounded-lg bg-background-secondary px-4 py-3 shadow-card transition-shadow hover:shadow-card-hover">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            {title}
-            {repo.description && (
-              <p className="line-clamp-1 break-words text-sm text-text-secondary">
-                {repo.description}
-              </p>
-            )}
-            {topicLine}
+      <article className="group flex min-w-0 overflow-hidden rounded-lg bg-background-secondary shadow-card transition-shadow hover:shadow-card-hover">
+        {/* Status cap — a thin status-coloured rail down the leading edge */}
+        <div aria-hidden className={`w-[3px] shrink-0 ${cap}`} />
+        <div className="flex min-w-0 flex-1 flex-col gap-3 px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              {title}
+              {repo.description && (
+                <p className="line-clamp-1 break-words text-sm text-text-secondary">
+                  {repo.description}
+                </p>
+              )}
+              {topicLine}
+            </div>
+            <div className="hidden md:block">{meta}</div>
+            {actions}
           </div>
-          <div className="hidden md:block">{meta}</div>
-          {actions}
+          <div className="md:hidden">{meta}</div>
+          {savedTools && <SavedRepoTools repoId={repo.id} />}
         </div>
-        <div className="md:hidden">{meta}</div>
-        {savedTools && <SavedRepoTools repoId={repo.id} />}
       </article>
     );
   }
 
   return (
     <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg bg-background-secondary shadow-card transition-shadow hover:shadow-card-hover">
+      {/* Status cap — a thin status-coloured rail across the top edge */}
+      <div aria-hidden className={`h-[3px] ${cap}`} />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
           {title}
