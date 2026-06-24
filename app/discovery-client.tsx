@@ -85,7 +85,7 @@ export const DiscoveryClient = () => {
           type="button"
           onClick={loadMore}
           disabled={loadingMore}
-          className="mx-auto rounded-lg bg-background-secondary px-7 py-2.5 text-sm font-medium text-text-primary shadow-card transition-colors hover:bg-background-tertiary disabled:opacity-60"
+          className="mx-auto mt-4 rounded-lg bg-background-secondary px-7 py-2.5 text-sm font-medium text-text-primary shadow-card transition-colors hover:bg-background-tertiary disabled:opacity-60"
         >
           {loadingMore ? "Loading…" : "Load more"}
         </button>

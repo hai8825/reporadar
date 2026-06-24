@@ -9,7 +9,9 @@ import type { RepoCardData, SearchFilters } from "@/lib/types";
 import { buildSearchQuery } from "@/lib/utils/search";
 import { useDebouncedValue } from "./useDebouncedValue";
 
-const PAGE_SIZE = 20;
+// 12 fills exactly 4 rows on the 3-col desktop grid and 6 on the 2-col tablet
+// grid — no half-empty last row at any breakpoint. Also the "Load more" step.
+const PAGE_SIZE = 12;
 const DEBOUNCE_MS = 300;
 
 type RepoSearchResult = {
