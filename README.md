@@ -40,7 +40,8 @@ Sign in with GitHub at `http://localhost:3000` — all routes require a session.
 | `npm run lint`      | ESLint                                        |
 | `npm test`          | Vitest unit tests for the pure utils          |
 | `npm run db:migrate`| `prisma migrate dev` — create/apply migrations |
-| `npm run db:deploy` | `prisma migrate deploy` — for production       |
+| `npm run db:deploy` | `prisma migrate deploy` — apply pending migrations |
+| `npm run db:deploy:prod` | Same, against **production** creds (`.env.production.local`) |
 | `npm run db:status` | `prisma migrate status` — verify in sync       |
 | `npm run db:studio` | Prisma Studio                                  |
 
@@ -57,6 +58,39 @@ Sign in with GitHub at `http://localhost:3000` — all routes require a session.
   the domain: `Folder`, `SavedRepo`, `Tag`, and a `SavedRepoTag` join. A repo
   belongs to one folder (`onDelete: SetNull` — deleting a folder unfiles, never
   unsaves) and many tags; everything cascades from `User`.
+
+## Deployment (Vercel)
+
+The app runs on the Node runtime as serverless functions. Two things must be
+lined up beyond pushing code: a **production GitHub OAuth app** and a
+**migrated production database**.
+
+**Environment variables** (Vercel → Production): `NEXTAUTH_URL` (the canonical
+prod URL), `NEXTAUTH_SECRET` (a fresh `openssl rand -base64 32`),
+`GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (from the prod OAuth app), and
+`DATABASE_URL` (the Neon **pooled** endpoint — serverless functions open many
+short-lived connections, so they go through PgBouncer).
+
+**Pooled vs direct.** Runtime uses the **pooled** URL. Migrations need the
+**direct** (unpooled) endpoint — PgBouncer's transaction pooling breaks the
+advisory locks and DDL that `migrate deploy` relies on. Note the runtime client
+([lib/prisma.ts](lib/prisma.ts)) reads `DATABASE_URL` directly, while the Prisma
+CLI reads [prisma.config.ts](prisma.config.ts) — so the app's URL and the
+migration URL are independent.
+
+**Migrations are not run by the build.** Apply them deliberately, two ways that
+coexist (both run the same idempotent `migrate deploy` against the same prod
+ledger, so neither double-applies):
+
+- **Manual (default here).** Put the prod **direct** URL in `.env.production.local`
+  (gitignored; see [.env.production.local.example](.env.production.local.example))
+  and run `npm run db:deploy:prod`. `PRISMA_ENV=production` makes the CLI load
+  that file, so a normal `db:migrate` can never touch prod.
+- **Automated (optional).** Add `DIRECT_DATABASE_URL` to Vercel's Production env
+  and set the build command to
+  `DATABASE_URL="$DIRECT_DATABASE_URL" prisma migrate deploy && next build`.
+  Then every push to `main` migrates, builds, and deploys. The manual command
+  stays as a break-glass tool.
 
 ## Architecture notes
 
