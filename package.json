@@ -9,6 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:check": "npm run codegen && git diff --exit-code gql",
     "verify": "npm run lint && npm run typecheck && npm test",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -35,6 +37,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^7.2.0",
+    "@graphql-codegen/client-preset": "^6.1.1",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
     "@types/react": "^18",
