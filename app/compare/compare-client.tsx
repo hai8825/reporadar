@@ -90,7 +90,8 @@ const ROWS: Row[] = [
   {
     label: "Topics",
     render: (r) => {
-      const topics = (r.repositoryTopics.nodes ?? []).map((n) => n.topic.name);
+      // Schema allows null entries in the connection; flatMap drops them
+      const topics = (r.repositoryTopics.nodes ?? []).flatMap((n) => n?.topic.name ?? []);
       return topics.length ? (
         <span className="flex flex-wrap justify-center gap-1.5">
           {topics.map((t) => (

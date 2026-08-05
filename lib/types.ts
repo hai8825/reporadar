@@ -1,5 +1,7 @@
 // Shared domain types. GraphQL response shapes mirror the fragments in lib/graphql.
 
+import type { RepoCardFragment } from "@/gql/graphql";
+
 export type RateLimitInfo = {
   cost: number;
   remaining: number;
@@ -11,22 +13,10 @@ export type LanguageRef = {
   color: string | null;
 };
 
-export type RepoCardData = {
-  id: string;
-  nameWithOwner: string;
-  name: string;
-  owner: { login: string };
-  description: string | null;
-  url: string;
-  stargazerCount: number;
-  forkCount: number;
-  pushedAt: string | null;
-  isArchived: boolean;
-  primaryLanguage: LanguageRef | null;
-  licenseInfo: { spdxId: string | null; name: string } | null;
-  repositoryTopics: { nodes: Array<{ topic: { name: string } }> | null };
-  goodFirstIssues: { totalCount: number };
-};
+// Migration shim (M1): the card shape is now derived from GitHub's introspected
+// schema instead of hand-written. Consumers keep the domain name until M2 gives
+// them FragmentType-based props, at which point this alias goes away.
+export type RepoCardData = RepoCardFragment;
 
 export type CommitNode = {
   oid: string;

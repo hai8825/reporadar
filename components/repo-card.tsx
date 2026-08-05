@@ -130,8 +130,9 @@ export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => 
   );
 
   // Topics as neutral outline chips, echoing the resting filter chips
+  // Schema allows null entries in the connection; flatMap drops them
   const topicNames = (repo.repositoryTopics.nodes ?? [])
-    .map((n) => n.topic.name)
+    .flatMap((n) => n?.topic.name ?? [])
     .slice(0, 4);
   const topicLine =
     topicNames.length > 0 ? (

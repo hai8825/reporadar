@@ -1,25 +1,14 @@
 import { gql, type TypedDocumentNode } from "@apollo/client";
+import { print } from "graphql";
+import { graphql } from "@/gql";
 import type { RateLimitInfo, RepoCardData, RepoDetailData } from "@/lib/types";
 import { REPO_CARD_FRAGMENT, REPO_DETAIL_FRAGMENT } from "./fragments";
 
 // Every query selects rateLimit so the nav badge always has fresh numbers.
 
-export type SearchReposData = {
-  search: {
-    repositoryCount: number;
-    pageInfo: { endCursor: string | null; hasNextPage: boolean };
-    edges: Array<{ node: RepoCardData | null } | null> | null;
-  };
-  rateLimit: RateLimitInfo | null;
-};
-
-export type SearchReposVars = {
-  query: string;
-  first: number;
-  after?: string | null;
-};
-
-export const SEARCH_REPOS: TypedDocumentNode<SearchReposData, SearchReposVars> = gql`
+// Migrated to codegen (M1): the result and variable types come from GitHub's
+// introspected schema, so there is nothing hand-written left to drift.
+export const SEARCH_REPOS = graphql(/* GraphQL */ `
   query SearchRepos($query: String!, $first: Int!, $after: String) {
     search(query: $query, type: REPOSITORY, first: $first, after: $after) {
       repositoryCount
@@ -39,8 +28,7 @@ export const SEARCH_REPOS: TypedDocumentNode<SearchReposData, SearchReposVars> =
       resetAt
     }
   }
-  ${REPO_CARD_FRAGMENT}
-`;
+`);
 
 export type SavedReposData = {
   // nodes() returns a heterogeneous Node list; non-repos come back without our fields
@@ -63,7 +51,7 @@ export const SAVED_REPOS: TypedDocumentNode<SavedReposData, SavedReposVars> = gq
       resetAt
     }
   }
-  ${REPO_CARD_FRAGMENT}
+  ${print(REPO_CARD_FRAGMENT)}
 `;
 
 export type RepoDetailQueryData = {

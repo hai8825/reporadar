@@ -4,6 +4,8 @@ import { NetworkStatus, useQuery } from "@apollo/client";
 import { useSession } from "next-auth/react";
 import { useCallback, useMemo } from "react";
 import { useReportRateLimit } from "@/components/providers";
+import { getFragmentData } from "@/gql";
+import { REPO_CARD_FRAGMENT } from "@/lib/graphql/fragments";
 import { SEARCH_REPOS } from "@/lib/graphql/queries";
 import type { RepoCardData, SearchFilters } from "@/lib/types";
 import { buildSearchQuery } from "@/lib/utils/search";
@@ -50,13 +52,13 @@ export const useRepoSearch = (filters: SearchFilters): RepoSearchResult => {
     void fetchMore({ variables: { after: endCursor } });
   }, [fetchMore, endCursor]);
 
-  const repos = useMemo(
-    () =>
-      (data?.search.edges ?? [])
-        .map((edge) => edge?.node)
-        .filter((node): node is RepoCardData => Boolean(node?.id)),
-    [data],
-  );
+  const repos = useMemo(() => {
+    const nodes = (data?.search.edges ?? []).flatMap((edge) => edge?.node ?? []);
+    // Nodes arrive fragment-masked; unmask, then drop anything that isn't a
+    // repository. `type: REPOSITORY` already guarantees that — the filter only
+    // covers the rest of the SearchResultItem union the schema allows.
+    return getFragmentData(REPO_CARD_FRAGMENT, nodes).filter((repo) => Boolean(repo.id));
+  }, [data]);
 
   return {
     repos,

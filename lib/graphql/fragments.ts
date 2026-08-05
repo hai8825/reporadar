@@ -1,7 +1,9 @@
 import { gql } from "@apollo/client";
+import { print } from "graphql";
+import { graphql } from "@/gql";
 
 // Everything a repo card in the grid needs — also the base for the detail fragment.
-export const REPO_CARD_FRAGMENT = gql`
+export const REPO_CARD_FRAGMENT = graphql(/* GraphQL */ `
   fragment RepoCard on Repository {
     id
     nameWithOwner
@@ -34,10 +36,15 @@ export const REPO_CARD_FRAGMENT = gql`
       totalCount
     }
   }
-`;
+`);
 
 // Card fields + readme blob, language breakdown, commit history, issue list, PR count.
 // Used by both /repo/[owner]/[name] and /compare.
+//
+// Still a hand-written `gql` document — it migrates in M2. It composes with the
+// generated RepoCard via print(): graphql() returns a location-less DocumentNode
+// and graphql-tag's interpolation reads `arg.loc.source.body`, so passing the
+// document itself throws at import time. The composed operation is unchanged.
 export const REPO_DETAIL_FRAGMENT = gql`
   fragment RepoDetails on Repository {
     ...RepoCard
@@ -95,5 +102,5 @@ export const REPO_DETAIL_FRAGMENT = gql`
       }
     }
   }
-  ${REPO_CARD_FRAGMENT}
+  ${print(REPO_CARD_FRAGMENT)}
 `;
