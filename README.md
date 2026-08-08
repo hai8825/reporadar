@@ -1,5 +1,7 @@
 # RepoRadar
 
+[![CI](https://github.com/hai8825/reporadar/actions/workflows/ci.yml/badge.svg)](https://github.com/hai8825/reporadar/actions/workflows/ci.yml)
+
 A smarter alternative to GitHub Trending — search and filter open-source
 repositories, read their health at a glance, save the ones you care about, and
 compare two side by side.
@@ -21,8 +23,9 @@ compare two side by side.
 ## Tech stack
 
 Next.js 14 (App Router) · TypeScript (strict) · Apollo Client + GitHub GraphQL
-API · NextAuth (GitHub OAuth, JWT sessions) · Prisma 7 + Neon Postgres ·
-Tailwind CSS · Vitest · deployed on Vercel.
+API · GraphQL Code Generator (client preset) · NextAuth (GitHub OAuth, JWT
+sessions) · Prisma 7 + Neon Postgres · Tailwind CSS · Vitest · deployed on
+Vercel.
 
 ## Run locally
 
@@ -36,8 +39,48 @@ Tailwind CSS · Vitest · deployed on Vercel.
    npm run dev
    ```
 
-All routes require a GitHub session. Other scripts: `build`, `lint`, `test`,
-`db:status`, `db:studio`.
+All routes require a GitHub session. Other scripts: `build`, `verify`
+(lint + typecheck + test), `db:status`, `db:studio`.
+
+### Regenerating GraphQL types
+
+Only needed after changing a query or fragment — `gql/` is committed, so a
+plain install and build never need a token:
+
+```bash
+GITHUB_TOKEN_CODEGEN=$(gh auth token) npm run codegen
+```
+
+Any GitHub PAT works; introspection requires no scopes. Add it to `.env.local`
+to skip the prefix. `npm run codegen:check` is the CI-side assertion that the
+committed output is current.
+
+## Type safety
+
+Not one GraphQL type in this app is hand-written. The chain runs:
+
+**GitHub's introspected schema → generated typed documents → per-fragment
+component props → a CI staleness check.**
+
+- **Introspected, not vendored.** `npm run codegen` reads GitHub's live schema,
+  so the types cannot drift from the API the way a checked-in SDL would.
+  Requires `GITHUB_TOKEN_CODEGEN`; nothing else does.
+- **Generated typed documents.** Every operation is a `graphql()` document from
+  the codegen [client preset](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client),
+  so result and variable types come from the schema. Passing one to `useQuery`
+  types the whole response — there is no hand-maintained response type left.
+- **Per-fragment props.** A component that renders a repo card takes
+  `FragmentType<typeof REPO_CARD_FRAGMENT>` and unmasks it itself, rather than
+  a prop type someone kept in sync by hand. Data stays masked from the query
+  down to the component that declares the fragment, so a component can only
+  read fields its own fragment selected.
+- **Committed output + a CI gate.** `gql/` is committed, so builds and Vercel
+  never need a token. `npm run codegen:check` regenerates and fails on any
+  diff — edit a query without regenerating and CI goes red.
+
+The schema was also more honest than the types it replaced: it flagged four
+places where connection nodes are nullable per element that the hand-written
+types had declared non-null.
 
 ## Architecture highlights
 
