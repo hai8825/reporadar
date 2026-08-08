@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      # `postinstall` runs `prisma generate`, and prisma.config.ts resolves the
+      # datasource through env("DATABASE_URL") — an unset value fails the config
+      # load, so `npm ci` cannot even install without one. Codegen and the build
+      # never open a connection, so a syntactically valid placeholder is enough.
+      # CI must never hold real database credentials.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Regenerates from GitHub's live schema and fails if the committed output
+      # in gql/ no longer matches — i.e. someone edited a query and did not run
+      # `npm run codegen`. This is the whole point of committing generated code.
+      - name: Check generated GraphQL types are current
+        run: npm run codegen:check
+        env:
+          # Introspection needs a token. Secret names cannot start with GITHUB_,
+          # so the secret is CODEGEN_GITHUB_TOKEN and is mapped to the variable
+          # codegen.ts reads. Falls back to the automatic per-run token, which
+          # needs no setup — introspection requires no scopes.
+          GITHUB_TOKEN_CODEGEN: ${{ secrets.CODEGEN_GITHUB_TOKEN || github.token }}
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      - run: npm run build
