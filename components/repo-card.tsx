@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import type { FragmentType } from "@/gql";
 import { useComparison } from "@/hooks/useComparison";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
-import type { RepoCardData } from "@/lib/types";
+import { REPO_CARD_FRAGMENT } from "@/lib/graphql/fragments";
+import { unmask } from "@/lib/graphql/unmask";
 import type { ViewMode } from "@/hooks/useViewMode";
 import { formatCount } from "@/lib/utils/format";
 import { type ActivityLevel, getActivityLevel } from "@/lib/utils/activity";
@@ -21,13 +23,15 @@ const CAP_CLASS: Record<ActivityLevel, string> = {
 };
 
 type RepoCardProps = {
-  repo: RepoCardData;
+  /** Anything carrying the RepoCard fragment — the card owns its own selection */
+  repo: FragmentType<typeof REPO_CARD_FRAGMENT>;
   view?: ViewMode;
   /** Collection page: render the folder picker + tag editor footer */
   savedTools?: boolean;
 };
 
-export const RepoCard = ({ repo, view = "tile", savedTools }: RepoCardProps) => {
+export const RepoCard = ({ repo: repoFragment, view = "tile", savedTools }: RepoCardProps) => {
+  const repo = unmask(REPO_CARD_FRAGMENT, repoFragment);
   const { isSaved, toggleSave } = useSavedRepos();
   const { isStaged, canStage, toggleStaged } = useComparison();
 

@@ -6,10 +6,12 @@ import { useMemo, useState } from "react";
 import { useReportRateLimit } from "@/components/providers";
 import { RepoGrid } from "@/components/repo-grid";
 import { ViewToggle } from "@/components/view-toggle";
+import type { FragmentType } from "@/gql";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
 import { useViewMode } from "@/hooks/useViewMode";
+import { REPO_CARD_FRAGMENT } from "@/lib/graphql/fragments";
+import { unmask } from "@/lib/graphql/unmask";
 import { SAVED_REPOS } from "@/lib/graphql/queries";
-import type { RepoCardData } from "@/lib/types";
 import { getActivityLevel, type ActivityLevel } from "@/lib/utils/activity";
 import { FOLDER_ALL, FolderCards } from "./folder-cards";
 
@@ -38,10 +40,13 @@ export default function CollectionPage() {
 
   useReportRateLimit(data?.rateLimit);
 
+  // Keyed by GitHub node id, kept masked — the cards downstream own the fragment
   const reposById = useMemo(() => {
-    const map = new Map<string, RepoCardData>();
+    const map = new Map<string, FragmentType<typeof REPO_CARD_FRAGMENT>>();
     for (const node of data?.nodes ?? []) {
-      if (node?.id) map.set(node.id, node);
+      if (!node) continue;
+      const { id } = unmask(REPO_CARD_FRAGMENT, node);
+      if (id) map.set(id, node);
     }
     return map;
   }, [data]);
@@ -63,20 +68,20 @@ export default function CollectionPage() {
         // AND semantics: repo must carry every selected tag
         activeTags.every((tag) => entry.tags.includes(tag)),
       )
-      .map((entry) => reposById.get(entry.id))
-      .filter((repo): repo is RepoCardData => repo !== undefined)
-      .filter(
-        (repo) =>
+      .flatMap((entry) => reposById.get(entry.id) ?? [])
+      .filter((node) => {
+        // Name/description/activity live behind the fragment — unmask to filter
+        const repo = unmask(REPO_CARD_FRAGMENT, node);
+        const matchesText =
           !text ||
           repo.nameWithOwner.toLowerCase().includes(text) ||
-          (repo.description ?? "").toLowerCase().includes(text),
-      )
-      .filter(
-        (repo) =>
-          // OR semantics: any selected activity level matches
+          (repo.description ?? "").toLowerCase().includes(text);
+        // OR semantics: any selected activity level matches
+        const matchesActivity =
           activeLevels.length === 0 ||
-          activeLevels.includes(getActivityLevel(repo.pushedAt, repo.isArchived).level),
-      );
+          activeLevels.includes(getActivityLevel(repo.pushedAt, repo.isArchived).level);
+        return matchesText && matchesActivity;
+      });
   }, [saved, folder, activeTags, reposById, query, activeLevels]);
 
   const toggleIn = <T,>(list: T[], value: T): T[] =>

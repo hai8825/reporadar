@@ -1,6 +1,5 @@
-import { gql } from "@apollo/client";
-import { print } from "graphql";
-import { graphql } from "@/gql";
+import { graphql, type FragmentType } from "@/gql";
+import { unmask } from "./unmask";
 
 // Everything a repo card in the grid needs — also the base for the detail fragment.
 export const REPO_CARD_FRAGMENT = graphql(/* GraphQL */ `
@@ -40,12 +39,7 @@ export const REPO_CARD_FRAGMENT = graphql(/* GraphQL */ `
 
 // Card fields + readme blob, language breakdown, commit history, issue list, PR count.
 // Used by both /repo/[owner]/[name] and /compare.
-//
-// Still a hand-written `gql` document — it migrates in M2. It composes with the
-// generated RepoCard via print(): graphql() returns a location-less DocumentNode
-// and graphql-tag's interpolation reads `arg.loc.source.body`, so passing the
-// document itself throws at import time. The composed operation is unchanged.
-export const REPO_DETAIL_FRAGMENT = gql`
+export const REPO_DETAIL_FRAGMENT = graphql(/* GraphQL */ `
   fragment RepoDetails on Repository {
     ...RepoCard
     homepageUrl
@@ -102,5 +96,17 @@ export const REPO_DETAIL_FRAGMENT = gql`
       }
     }
   }
-  ${print(REPO_CARD_FRAGMENT)}
-`;
+`);
+
+/**
+ * RepoDetails spreads RepoCard, so a detail view needs both fragments' fields
+ * but masking exposes only one level at a time. Unmask both and merge: they
+ * describe the same repository object and unmasking is an identity function at
+ * runtime, so this is a type-level join, not a copy of live data.
+ */
+export const unmaskRepoDetails = (repo: FragmentType<typeof REPO_DETAIL_FRAGMENT>) => {
+  const details = unmask(REPO_DETAIL_FRAGMENT, repo);
+  return { ...unmask(REPO_CARD_FRAGMENT, details), ...details };
+};
+
+export type RepoDetails = ReturnType<typeof unmaskRepoDetails>;

@@ -1,56 +1,11 @@
-// Shared domain types. GraphQL response shapes mirror the fragments in lib/graphql.
+// Shared domain types. GraphQL response shapes are no longer here — they are
+// generated from GitHub's schema into gql/ and consumed via fragment types.
 
-import type { RepoCardFragment } from "@/gql/graphql";
+import type { SearchReposQuery } from "@/gql/graphql";
 
-export type RateLimitInfo = {
-  cost: number;
-  remaining: number;
-  resetAt: string;
-};
-
-export type LanguageRef = {
-  name: string;
-  color: string | null;
-};
-
-// Migration shim (M1): the card shape is now derived from GitHub's introspected
-// schema instead of hand-written. Consumers keep the domain name until M2 gives
-// them FragmentType-based props, at which point this alias goes away.
-export type RepoCardData = RepoCardFragment;
-
-export type CommitNode = {
-  oid: string;
-  messageHeadline: string;
-  committedDate: string;
-  url: string;
-  author: { name: string | null } | null;
-};
-
-export type IssueNode = {
-  id: string;
-  number: number;
-  title: string;
-  url: string;
-  createdAt: string;
-};
-
-export type RepoDetailData = RepoCardData & {
-  homepageUrl: string | null;
-  diskUsage: number | null; // in kilobytes
-  openIssues: { totalCount: number };
-  openPullRequests: { totalCount: number };
-  watchers: { totalCount: number };
-  languages: {
-    totalSize: number;
-    edges: Array<{ size: number; node: LanguageRef }> | null;
-  } | null;
-  readme: { text: string | null } | null;
-  defaultBranchRef: {
-    name: string;
-    target: { history: { nodes: CommitNode[] | null } } | null;
-  } | null;
-  issues: { nodes: IssueNode[] | null };
-};
+// Every operation selects the same rateLimit block; derive the shape from one
+// of them so the nav badge cannot drift from what the API returns.
+export type RateLimitInfo = NonNullable<SearchReposQuery["rateLimit"]>;
 
 // Preset values for the "minimum stars" filter
 export const STAR_PRESETS = [100, 1_000, 10_000, 50_000] as const;

@@ -1,12 +1,13 @@
-import type { RepoDetailData } from "@/lib/types";
+import type { RepoDetailsFragment } from "@/gql/graphql";
 
 type LanguageBarProps = {
-  languages: NonNullable<RepoDetailData["languages"]>;
+  languages: NonNullable<RepoDetailsFragment["languages"]>;
 };
 
 // Proportional horizontal bar from languages.edges + legend with percentages
 export const LanguageBar = ({ languages }: LanguageBarProps) => {
-  const edges = languages.edges ?? [];
+  // Edges are nullable per element in the schema — drop the holes
+  const edges = (languages.edges ?? []).filter((edge) => edge !== null);
   if (edges.length === 0 || languages.totalSize === 0) return null;
 
   return (

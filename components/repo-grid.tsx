@@ -1,11 +1,13 @@
 "use client";
 
+import type { FragmentType } from "@/gql";
 import type { ViewMode } from "@/hooks/useViewMode";
-import type { RepoCardData } from "@/lib/types";
+import { REPO_CARD_FRAGMENT } from "@/lib/graphql/fragments";
+import { unmask } from "@/lib/graphql/unmask";
 import { RepoCard } from "./repo-card";
 
 type RepoGridProps = {
-  repos: RepoCardData[];
+  repos: Array<FragmentType<typeof REPO_CARD_FRAGMENT>>;
   loading?: boolean;
   error?: Error;
   emptyMessage: string;
@@ -62,9 +64,11 @@ export const RepoGrid = ({
 
   return (
     <div className={layout}>
-      {repos.map((repo) => (
-        <RepoCard key={repo.id} repo={repo} view={view} savedTools={savedTools} />
-      ))}
+      {repos.map((repo) => {
+        // Cards stay masked on the way down; the grid only needs the key
+        const { id } = unmask(REPO_CARD_FRAGMENT, repo);
+        return <RepoCard key={id} repo={repo} view={view} savedTools={savedTools} />;
+      })}
     </div>
   );
 };

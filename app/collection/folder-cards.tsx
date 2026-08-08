@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { CloseIcon, PencilIcon } from "@/components/icons";
+import type { FragmentType } from "@/gql";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
-import type { RepoCardData, SavedRepo } from "@/lib/types";
+import { REPO_CARD_FRAGMENT } from "@/lib/graphql/fragments";
+import { unmask } from "@/lib/graphql/unmask";
+import type { SavedRepo } from "@/lib/types";
+
+type ReposById = Map<string, FragmentType<typeof REPO_CARD_FRAGMENT>>;
 
 // Sentinel key for the built-in "everything" view. Real folder names are
 // unlikely to collide, and createFolder trims input so it can't be typed.
@@ -17,13 +22,12 @@ type FolderStats = {
 
 // Aggregate what a folder contains: repo count, top languages (from live
 // fetched data), and the tags used inside
-const computeStats = (
-  entries: SavedRepo[],
-  reposById: Map<string, RepoCardData>,
-): FolderStats => {
+const computeStats = (entries: SavedRepo[], reposById: ReposById): FolderStats => {
   const langCounts = new Map<string, { color: string | null; count: number }>();
   for (const entry of entries) {
-    const lang = reposById.get(entry.id)?.primaryLanguage;
+    const node = reposById.get(entry.id);
+    if (!node) continue;
+    const lang = unmask(REPO_CARD_FRAGMENT, node).primaryLanguage;
     if (!lang) continue;
     const existing = langCounts.get(lang.name);
     langCounts.set(lang.name, {
@@ -44,7 +48,7 @@ const computeStats = (
 type FolderCardsProps = {
   active: string;
   onSelect: (key: string) => void;
-  reposById: Map<string, RepoCardData>;
+  reposById: ReposById;
 };
 
 export const FolderCards = ({ active, onSelect, reposById }: FolderCardsProps) => {

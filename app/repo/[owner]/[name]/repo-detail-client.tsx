@@ -11,6 +11,7 @@ import { BookmarkIcon, ForkIcon, StarIcon } from "@/components/icons";
 import { LanguageBar } from "@/components/language-bar";
 import { useReportRateLimit } from "@/components/providers";
 import { useSavedRepos } from "@/hooks/useSavedRepos";
+import { unmaskRepoDetails } from "@/lib/graphql/fragments";
 import { REPO_DETAIL } from "@/lib/graphql/queries";
 import { formatCount, formatDate, timeAgo } from "@/lib/utils/format";
 import { makeReadmeUrlTransform } from "@/lib/utils/readme";
@@ -38,8 +39,8 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
     );
   }
 
-  const repo = data?.repository;
-  if (error || !repo) {
+  const masked = data?.repository;
+  if (error || !masked) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
         <p className="text-sm text-text-secondary">
@@ -52,9 +53,14 @@ export const RepoDetailClient = ({ owner, name }: RepoDetailClientProps) => {
     );
   }
 
+  // This view reads both card and detail fields, so unmask the whole RepoDetails
+  const repo = unmaskRepoDetails(masked);
+
+  // Connection nodes are nullable per element in the schema — drop the holes.
+  // `filter(Boolean)` does not narrow; an explicit null check does.
   const commits =
-    repo.defaultBranchRef?.target?.history.nodes?.filter(Boolean) ?? [];
-  const issues = repo.issues.nodes ?? [];
+    repo.defaultBranchRef?.target?.history.nodes?.filter((c) => c !== null) ?? [];
+  const issues = repo.issues.nodes?.filter((i) => i !== null) ?? [];
 
   // READMEs are raw markdown — rewrite relative image/link paths to GitHub so
   // they don't 404 against our origin (see makeReadmeUrlTransform).
