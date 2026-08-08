@@ -109,3 +109,17 @@ Runs on Vercel (Node runtime) over Neon Postgres. The one non-obvious bit: the
 app uses Neon's **pooled** endpoint at runtime (serverless → PgBouncer), but
 migrations need the **direct** endpoint — `npm run db:deploy:prod` keeps that
 split straight.
+
+## Roadmap
+
+- **Consumer, not producer.** RepoRadar exercises the whole schema→types
+  workflow against someone else's API, but nothing here demonstrates schema
+  *design* or *serving* — no resolvers, no schema I own. Closing that gap
+  properly means a project built around a schema, not a server bolted onto
+  this one.
+- **Next.js 15.** 14.2.35 is the end of the 14 line, and the remaining security
+  advisories are only fixed on 15.x. A major upgrade of a live App Router app,
+  so it gets its own pass rather than riding along with unrelated work.
+- **Server-side rendering for shared searches.** Filters already live in the
+  URL; rendering the first page on the server would make a shared link useful
+  before JavaScript loads.
