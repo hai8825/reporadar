@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ActivityBadge } from "@/components/activity-badge";
 import { useReportRateLimit } from "@/components/providers";
+import { type RepoDetails, unmaskRepoDetails } from "@/lib/graphql/fragments";
 import { COMPARE_REPOS } from "@/lib/graphql/queries";
-import type { RepoDetailData } from "@/lib/types";
 import { ACTIVITY_RANK, getActivityLevel } from "@/lib/utils/activity";
 import { formatCount, formatDate, formatDiskSize } from "@/lib/utils/format";
 
@@ -20,9 +20,9 @@ const parseRepoRef = (ref: string | null): [string, string] | null => {
 
 type Row = {
   label: string;
-  render: (repo: RepoDetailData) => React.ReactNode;
+  render: (repo: RepoDetails) => React.ReactNode;
   // Numeric score per repo; higher wins. Omit for rows with no winner (language, topics…)
-  score?: (repo: RepoDetailData) => number;
+  score?: (repo: RepoDetails) => number;
 };
 
 const ROWS: Row[] = [
@@ -90,7 +90,8 @@ const ROWS: Row[] = [
   {
     label: "Topics",
     render: (r) => {
-      const topics = (r.repositoryTopics.nodes ?? []).map((n) => n.topic.name);
+      // Schema allows null entries in the connection; flatMap drops them
+      const topics = (r.repositoryTopics.nodes ?? []).flatMap((n) => n?.topic.name ?? []);
       return topics.length ? (
         <span className="flex flex-wrap justify-center gap-1.5">
           {topics.map((t) => (
@@ -145,15 +146,19 @@ export const CompareClient = () => {
   }
   if (error) return <CompareMessage>GitHub error: {error.message}</CompareMessage>;
 
-  const { repoA, repoB } = data ?? {};
-  if (!repoA || !repoB) {
+  const { repoA: maskedA, repoB: maskedB } = data ?? {};
+  if (!maskedA || !maskedB) {
     return (
       <CompareMessage>
-        {!repoA && <>Repo <strong>{searchParams.get("a")}</strong> was not found. </>}
-        {!repoB && <>Repo <strong>{searchParams.get("b")}</strong> was not found.</>}
+        {!maskedA && <>Repo <strong>{searchParams.get("a")}</strong> was not found. </>}
+        {!maskedB && <>Repo <strong>{searchParams.get("b")}</strong> was not found.</>}
       </CompareMessage>
     );
   }
+
+  // Rows read both card and detail fields, so unmask the whole RepoDetails view
+  const repoA = unmaskRepoDetails(maskedA);
+  const repoB = unmaskRepoDetails(maskedB);
 
   return (
     <div className="flex flex-col gap-6">

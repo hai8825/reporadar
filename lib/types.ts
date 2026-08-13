@@ -1,66 +1,11 @@
-// Shared domain types. GraphQL response shapes mirror the fragments in lib/graphql.
+// Shared domain types. GraphQL response shapes are no longer here — they are
+// generated from GitHub's schema into gql/ and consumed via fragment types.
 
-export type RateLimitInfo = {
-  cost: number;
-  remaining: number;
-  resetAt: string;
-};
+import type { SearchReposQuery } from "@/gql/graphql";
 
-export type LanguageRef = {
-  name: string;
-  color: string | null;
-};
-
-export type RepoCardData = {
-  id: string;
-  nameWithOwner: string;
-  name: string;
-  owner: { login: string };
-  description: string | null;
-  url: string;
-  stargazerCount: number;
-  forkCount: number;
-  pushedAt: string | null;
-  isArchived: boolean;
-  primaryLanguage: LanguageRef | null;
-  licenseInfo: { spdxId: string | null; name: string } | null;
-  repositoryTopics: { nodes: Array<{ topic: { name: string } }> | null };
-  goodFirstIssues: { totalCount: number };
-};
-
-export type CommitNode = {
-  oid: string;
-  messageHeadline: string;
-  committedDate: string;
-  url: string;
-  author: { name: string | null } | null;
-};
-
-export type IssueNode = {
-  id: string;
-  number: number;
-  title: string;
-  url: string;
-  createdAt: string;
-};
-
-export type RepoDetailData = RepoCardData & {
-  homepageUrl: string | null;
-  diskUsage: number | null; // in kilobytes
-  openIssues: { totalCount: number };
-  openPullRequests: { totalCount: number };
-  watchers: { totalCount: number };
-  languages: {
-    totalSize: number;
-    edges: Array<{ size: number; node: LanguageRef }> | null;
-  } | null;
-  readme: { text: string | null } | null;
-  defaultBranchRef: {
-    name: string;
-    target: { history: { nodes: CommitNode[] | null } } | null;
-  } | null;
-  issues: { nodes: IssueNode[] | null };
-};
+// Every operation selects the same rateLimit block; derive the shape from one
+// of them so the nav badge cannot drift from what the API returns.
+export type RateLimitInfo = NonNullable<SearchReposQuery["rateLimit"]>;
 
 // Preset values for the "minimum stars" filter
 export const STAR_PRESETS = [100, 1_000, 10_000, 50_000] as const;

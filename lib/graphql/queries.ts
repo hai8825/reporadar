@@ -1,25 +1,10 @@
-import { gql, type TypedDocumentNode } from "@apollo/client";
-import type { RateLimitInfo, RepoCardData, RepoDetailData } from "@/lib/types";
-import { REPO_CARD_FRAGMENT, REPO_DETAIL_FRAGMENT } from "./fragments";
+import { graphql } from "@/gql";
 
 // Every query selects rateLimit so the nav badge always has fresh numbers.
+// Fragment spreads resolve through the generated document store — codegen
+// composes the referenced fragments into each operation.
 
-export type SearchReposData = {
-  search: {
-    repositoryCount: number;
-    pageInfo: { endCursor: string | null; hasNextPage: boolean };
-    edges: Array<{ node: RepoCardData | null } | null> | null;
-  };
-  rateLimit: RateLimitInfo | null;
-};
-
-export type SearchReposVars = {
-  query: string;
-  first: number;
-  after?: string | null;
-};
-
-export const SEARCH_REPOS: TypedDocumentNode<SearchReposData, SearchReposVars> = gql`
+export const SEARCH_REPOS = graphql(/* GraphQL */ `
   query SearchRepos($query: String!, $first: Int!, $after: String) {
     search(query: $query, type: REPOSITORY, first: $first, after: $after) {
       repositoryCount
@@ -39,18 +24,12 @@ export const SEARCH_REPOS: TypedDocumentNode<SearchReposData, SearchReposVars> =
       resetAt
     }
   }
-  ${REPO_CARD_FRAGMENT}
-`;
+`);
 
-export type SavedReposData = {
-  // nodes() returns a heterogeneous Node list; non-repos come back without our fields
-  nodes: Array<RepoCardData | null>;
-  rateLimit: RateLimitInfo | null;
-};
-
-export type SavedReposVars = { ids: string[] };
-
-export const SAVED_REPOS: TypedDocumentNode<SavedReposData, SavedReposVars> = gql`
+// nodes() returns a heterogeneous Node list; the inline fragment is what makes
+// repositories come back with card fields, and the generated union type now
+// says so instead of a comment.
+export const SAVED_REPOS = graphql(/* GraphQL */ `
   query SavedRepos($ids: [ID!]!) {
     nodes(ids: $ids) {
       ... on Repository {
@@ -63,17 +42,9 @@ export const SAVED_REPOS: TypedDocumentNode<SavedReposData, SavedReposVars> = gq
       resetAt
     }
   }
-  ${REPO_CARD_FRAGMENT}
-`;
+`);
 
-export type RepoDetailQueryData = {
-  repository: RepoDetailData | null;
-  rateLimit: RateLimitInfo | null;
-};
-
-export type RepoDetailVars = { owner: string; name: string };
-
-export const REPO_DETAIL: TypedDocumentNode<RepoDetailQueryData, RepoDetailVars> = gql`
+export const REPO_DETAIL = graphql(/* GraphQL */ `
   query RepoDetail($owner: String!, $name: String!) {
     repository(owner: $owner, name: $name) {
       ...RepoDetails
@@ -84,24 +55,10 @@ export const REPO_DETAIL: TypedDocumentNode<RepoDetailQueryData, RepoDetailVars>
       resetAt
     }
   }
-  ${REPO_DETAIL_FRAGMENT}
-`;
-
-export type CompareReposData = {
-  repoA: RepoDetailData | null;
-  repoB: RepoDetailData | null;
-  rateLimit: RateLimitInfo | null;
-};
-
-export type CompareReposVars = {
-  owner1: string;
-  name1: string;
-  owner2: string;
-  name2: string;
-};
+`);
 
 // Aliased fields fetch both repos in a single round trip
-export const COMPARE_REPOS: TypedDocumentNode<CompareReposData, CompareReposVars> = gql`
+export const COMPARE_REPOS = graphql(/* GraphQL */ `
   query CompareRepos($owner1: String!, $name1: String!, $owner2: String!, $name2: String!) {
     repoA: repository(owner: $owner1, name: $name1) {
       ...RepoDetails
@@ -115,5 +72,4 @@ export const COMPARE_REPOS: TypedDocumentNode<CompareReposData, CompareReposVars
       resetAt
     }
   }
-  ${REPO_DETAIL_FRAGMENT}
-`;
+`);
