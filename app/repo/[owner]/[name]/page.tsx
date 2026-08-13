@@ -1,14 +1,14 @@
 import { RepoDetailClient } from "./repo-detail-client";
 
+// Next 15 made the request APIs async — params is a promise now
 type RepoPageProps = {
-  params: { owner: string; name: string };
+  params: Promise<{ owner: string; name: string }>;
 };
 
-export default function RepoPage({ params }: RepoPageProps) {
+export default async function RepoPage({ params }: RepoPageProps) {
+  const { owner, name } = await params;
+
   return (
-    <RepoDetailClient
-      owner={decodeURIComponent(params.owner)}
-      name={decodeURIComponent(params.name)}
-    />
+    <RepoDetailClient owner={decodeURIComponent(owner)} name={decodeURIComponent(name)} />
   );
 }
