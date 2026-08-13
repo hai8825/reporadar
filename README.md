@@ -22,10 +22,10 @@ compare two side by side.
 
 ## Tech stack
 
-Next.js 14 (App Router) · TypeScript (strict) · Apollo Client + GitHub GraphQL
+Next.js 15 (App Router) · TypeScript (strict) · Apollo Client + GitHub GraphQL
 API · GraphQL Code Generator (client preset) · NextAuth (GitHub OAuth, JWT
-sessions) · Prisma 7 + Neon Postgres · Tailwind CSS · Vitest · deployed on
-Vercel.
+sessions) · Prisma 7 + Neon Postgres · Tailwind CSS · Vitest · GitHub Actions ·
+deployed on Vercel.
 
 ## Run locally
 
@@ -41,6 +41,16 @@ Vercel.
 
 All routes require a GitHub session. Other scripts: `build`, `verify`
 (lint + typecheck + test), `db:status`, `db:studio`.
+
+`verify` deliberately stops short of `build`, so run `npm run build` too before
+anything ships. Some breakages are only visible there: Next validates route
+signatures against types it generates during a build, and silently ignores
+unrecognised keys in `next.config.mjs` — both would otherwise pass `verify`.
+CI runs `build` as its own step.
+
+Local sign-in needs its **own** GitHub OAuth App. A redirect URI must match the
+registered callback on host and port, so the app serving production cannot also
+serve `localhost:3000`.
 
 ### Regenerating GraphQL types
 
@@ -74,9 +84,12 @@ component props → a CI staleness check.**
   a prop type someone kept in sync by hand. Data stays masked from the query
   down to the component that declares the fragment, so a component can only
   read fields its own fragment selected.
-- **Committed output + a CI gate.** `gql/` is committed, so builds and Vercel
-  never need a token. `npm run codegen:check` regenerates and fails on any
-  diff — edit a query without regenerating and CI goes red.
+- **Committed output + two CI gates.** `gql/` is committed, so builds and
+  Vercel never need a token. `npm run codegen:check` regenerates and fails on
+  any diff, catching a query edited without regenerating. Snapshots of the
+  printed operations catch the opposite case — a query changed *and*
+  regenerated, where the types faithfully describe different GraphQL and
+  `codegen:check` stays green.
 
 The schema was also more honest than the types it replaced: it flagged four
 places where connection nodes are nullable per element that the hand-written
@@ -117,9 +130,14 @@ split straight.
   *design* or *serving* — no resolvers, no schema I own. Closing that gap
   properly means a project built around a schema, not a server bolted onto
   this one.
-- **Next.js 15.** 14.2.35 is the end of the 14 line, and the remaining security
-  advisories are only fixed on 15.x. A major upgrade of a live App Router app,
-  so it gets its own pass rather than riding along with unrelated work.
 - **Server-side rendering for shared searches.** Filters already live in the
   URL; rendering the first page on the server would make a shared link useful
   before JavaScript loads.
+- **Auth on preview deployments.** `NEXTAUTH_URL` is pinned to the production
+  origin and a GitHub OAuth App matches exactly one host and port, so sign-in
+  from a Vercel preview lands on production instead. Every preview is therefore
+  unverifiable by hand. Fixing it means deriving the URL from `VERCEL_URL` plus
+  a second OAuth App for previews, or moving to a GitHub App.
+- **Next.js 16.** Not urgent: Next 15 cleared every advisory Next itself
+  carried. What remains is a `postcss` and a `sharp` that Next bundles, and
+  `sharp` is never invoked here because nothing imports `next/image`.
