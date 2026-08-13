@@ -12,6 +12,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    // Added by Next 15's config check — required for top-level await
+    "target": "ES2017",
     "plugins": [
       {
         "name": "next"
