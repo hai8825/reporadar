@@ -25,7 +25,20 @@ npm run verify
 0 — not when the work "looks complete". Run it before every commit; a failing
 check blocks the commit.
 
-Run `npm run build` separately before anything that ships, since Vercel does.
+**`verify` passing is not enough to ship.** Run `npm run build` too. Two real
+breakages have slipped through it:
+
+- Next validates route signatures against types it generates *during a build*.
+  A page declaring its own props type typechecks fine while violating the
+  contract — Next 15's async `params` rendered the literal string
+  `"undefined/undefined"` with a green `verify`.
+- `next.config.mjs` silently ignores unrecognised keys. When
+  `serverComponentsExternalPackages` moved to `serverExternalPackages`, the
+  stale key would have un-externalised Prisma and `pg` from the server bundle
+  and broken the database layer at runtime, with nothing failing locally.
+
+CI runs `build` as its own step, so nothing reaches production on `verify`
+alone. It is local confidence that is overstated.
 
 ---
 
@@ -60,17 +73,21 @@ Run `npm run build` separately before anything that ships, since Vercel does.
 | Path | Why |
 |---|---|
 | `gql/` | GraphQL Code Generator output. Edit the `graphql()` operation in the source file, then run `npm run codegen`. Hand edits are wiped and will fail `codegen:check` in CI. |
+| `lib/graphql/__snapshots__/` | Pins the GraphQL actually sent to GitHub. Never hand-edit; if a query change is intentional, read the failing diff and run `npx vitest -u`. A failure here means the wire traffic changed, which is worth a second look — these queries hit a rate-limited API. |
 | `generated/prisma/` | Prisma client output, rebuilt by `postinstall`. Gitignored. |
 | `prisma/migrations/` | Applied migrations. Never rewrite one — add a new migration. |
 | `package-lock.json` | Only ever changed as a side effect of a real `npm install`. |
 
 ## Do not change without being asked
 
-- **Query behavior.** The GraphQL codegen work (spec 02) is a type-safety
-  refactor: selection sets, variables, pagination and the rate-limit budgeting
-  in `lib/apollo.ts` must come out the other side identical. If the app behaves
-  differently afterward, something went wrong.
-- **Prisma / NextAuth / Server Actions layers** — out of scope for spec 02.
+- **Query behavior.** Selection sets, variables, pagination and the rate-limit
+  budgeting in `lib/apollo.ts` are settled. Spec 02 changed how they are typed,
+  never what they ask for, and the operation snapshots now hold that line. A
+  changed query costs real rate-limit budget, so it should be a decision, not a
+  side effect.
+- **Prisma / NextAuth / Server Actions layers.** Ask first. Prisma has since
+  moved to 7.9 for security patches, but the schema, migrations and auth flow
+  are untouched.
 - The package manager, the framework version, or the folder layout.
 
 ## What NOT to do
