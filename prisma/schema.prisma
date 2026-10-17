@@ -109,10 +109,20 @@ model SavedRepo {
 
   savedAt DateTime @default(now())
 
+  // Availability lifecycle. A repo whose GitHub node stops resolving (deleted,
+  // or gone private / access lost — the API can't tell us which) gets stamped
+  // here on the first failed load, and the stamp is cleared the moment it
+  // resolves again. After a grace period it is archived (archivedAt set), which
+  // keeps the record + tags + folder but drops it from the live refetch.
+  unavailableSince DateTime?
+  archivedAt       DateTime?
+
   // A repo can only be saved once per user
   @@unique([userId, githubId])
   @@index([userId])
   @@index([folderId])
+  // Partitioning the collection into live / unavailable / archived
+  @@index([userId, archivedAt])
 }
 
 model Tag {

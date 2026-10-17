@@ -2,7 +2,7 @@
 
 import { useQuery } from "@apollo/client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReportRateLimit } from "@/components/providers";
 import { RepoGrid } from "@/components/repo-grid";
 import { ViewToggle } from "@/components/view-toggle";
@@ -14,6 +14,7 @@ import { unmask } from "@/lib/graphql/unmask";
 import { SAVED_REPOS } from "@/lib/graphql/queries";
 import { getActivityLevel, type ActivityLevel } from "@/lib/utils/activity";
 import { FOLDER_ALL, FolderCards } from "./folder-cards";
+import { UnavailableSection } from "./unavailable-section";
 
 const ACTIVITY_OPTIONS: Array<{ label: string; value: ActivityLevel }> = [
   { label: "Active", value: "active" },
@@ -23,7 +24,17 @@ const ACTIVITY_OPTIONS: Array<{ label: string; value: ActivityLevel }> = [
 ];
 
 export default function CollectionPage() {
-  const { saved, savedIds, allTags, folders, isReady } = useSavedRepos();
+  const {
+    saved,
+    savedIds,
+    archived,
+    allTags,
+    folders,
+    isReady,
+    reconcileAvailability,
+    removeRepo,
+    restoreRepo,
+  } = useSavedRepos();
   const [view, setView] = useViewMode();
   const [query, setQuery] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
@@ -36,6 +47,10 @@ export default function CollectionPage() {
     variables: { ids: savedIds },
     skip: !isReady || savedIds.length === 0,
     fetchPolicy: "cache-and-network", // always refresh on mount
+    // Keep partial results when GitHub can't resolve some saved ids — one
+    // deleted repo returns a top-level error but the rest still come back.
+    // Without this, Apollo's default "none" would discard ALL data.
+    errorPolicy: "all",
   });
 
   useReportRateLimit(data?.rateLimit);
@@ -50,6 +65,31 @@ export default function CollectionPage() {
     }
     return map;
   }, [data]);
+
+  // The ids GitHub actually resolved this load (its keys) — drives the split
+  // between what renders in the grid and what's flagged unavailable.
+  const resolvedIds = useMemo(() => new Set(reposById.keys()), [reposById]);
+
+  // Saved repos GitHub didn't resolve this load. Only meaningful once we HAVE
+  // data — on a skipped/failed query this stays empty so nothing is mis-flagged.
+  const unavailable = useMemo(
+    () => (data ? saved.filter((repo) => !resolvedIds.has(repo.id)) : []),
+    [data, saved, resolvedIds],
+  );
+
+  // Persist the availability verdict after a SUCCESSFUL load only. `data` is
+  // undefined on a total failure (network/token/rate-limit), so a transient
+  // outage can never flag the whole collection as unavailable. Guarded by a
+  // signature of the resolved set so we don't re-POST on every re-render.
+  const lastReconciled = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isReady || !data) return;
+    const ids = Array.from(resolvedIds);
+    const signature = [...ids].sort().join(",");
+    if (signature === lastReconciled.current) return;
+    lastReconciled.current = signature;
+    reconcileAvailability(ids);
+  }, [isReady, data, resolvedIds, reconcileAvailability]);
 
   // A deleted folder may still be selected for one render — treat as All
   const folder =
@@ -93,7 +133,7 @@ export default function CollectionPage() {
     activeLevels.length > 0 ||
     folder !== FOLDER_ALL;
 
-  if (isReady && savedIds.length === 0) {
+  if (isReady && savedIds.length === 0 && archived.length === 0) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
         <h1 className="font-display text-2xl text-text-primary">Nothing saved yet</h1>
@@ -178,7 +218,9 @@ export default function CollectionPage() {
       <RepoGrid
         repos={repos}
         loading={!isReady || (loading && repos.length === 0 && !hasActiveFilter)}
-        error={error}
+        // Only a TOTAL failure (no data) is a hard error. Partial "could not
+        // resolve" errors still carry data and surface via the sections below.
+        error={error && !data ? error : undefined}
         emptyMessage={
           hasActiveFilter
             ? "No saved repos match this filter."
@@ -186,6 +228,18 @@ export default function CollectionPage() {
         }
         view={view}
         savedTools
+      />
+
+      <UnavailableSection
+        variant="unavailable"
+        repos={unavailable}
+        onRemove={removeRepo}
+      />
+      <UnavailableSection
+        variant="archived"
+        repos={archived}
+        onRemove={removeRepo}
+        onRestore={restoreRepo}
       />
     </div>
   );

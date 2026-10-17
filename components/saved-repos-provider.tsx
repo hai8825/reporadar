@@ -15,8 +15,11 @@ import {
   createFolder as createFolderAction,
   deleteFolder as deleteFolderAction,
   getSavedState,
+  reconcileAvailability as reconcileAvailabilityAction,
+  removeRepo as removeRepoAction,
   removeRepoTag,
   renameFolder as renameFolderAction,
+  restoreRepo as restoreRepoAction,
   type SavedState,
   setRepoFolder as setRepoFolderAction,
   toggleSaveRepo,
@@ -32,8 +35,9 @@ import { normalizeTag } from "@/lib/utils/tags";
 // snapshot reflects every write.
 
 type SavedReposContextValue = {
-  saved: SavedRepo[]; // sorted most recently saved first
-  savedIds: string[];
+  saved: SavedRepo[]; // live + unavailable, sorted most recently saved first
+  savedIds: string[]; // ids sent to GitHub (excludes archived)
+  archived: SavedRepo[]; // dropped from refetch; shown in the Archived view
   allTags: string[]; // distinct tags across the collection, sorted
   folders: string[]; // user-created folder names, in creation order
   isReady: boolean; // false until the first server load resolves
@@ -45,6 +49,10 @@ type SavedReposContextValue = {
   renameFolder: (from: string, to: string) => void;
   deleteFolder: (name: string) => void;
   setRepoFolder: (repoId: string, folder: string | null) => void;
+  // Availability lifecycle
+  reconcileAvailability: (resolvedIds: string[]) => void;
+  removeRepo: (repoId: string) => void; // hard-delete from any list
+  restoreRepo: (repoId: string) => void; // un-archive + re-probe next load
 };
 
 const SavedReposContext = createContext<SavedReposContextValue | null>(null);
@@ -63,11 +71,13 @@ export const SavedReposProvider = ({
   const { status } = useSession();
 
   const [saved, setSaved] = useState<SavedRepo[]>([]);
+  const [archived, setArchived] = useState<SavedRepo[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
   const [isReady, setIsReady] = useState(false);
 
   const applyState = useCallback((state: SavedState) => {
     setSaved(state.saved);
+    setArchived(state.archived);
     setFolders(state.folders);
   }, []);
 
@@ -134,7 +144,14 @@ export const SavedReposProvider = ({
             prev.some((r) => r.id === repo.id)
               ? prev.filter((r) => r.id !== repo.id)
               : [
-                  { ...repo, savedAt: new Date().toISOString(), tags: [], folder: null },
+                  {
+                    ...repo,
+                    savedAt: new Date().toISOString(),
+                    tags: [],
+                    folder: null,
+                    unavailableSince: null,
+                    archivedAt: null,
+                  },
                   ...prev,
                 ],
           ),
@@ -232,11 +249,43 @@ export const SavedReposProvider = ({
     [runMutation],
   );
 
+  // Persist the availability verdict from a GitHub load. No optimistic update —
+  // the server returns the authoritative stamps (including any 30-day archival).
+  const reconcileAvailability = useCallback(
+    (resolvedIds: string[]) =>
+      runMutation(
+        () => {},
+        () => reconcileAvailabilityAction({ resolvedIds }),
+      ),
+    [runMutation],
+  );
+
+  // Hard-delete from whichever list the repo sits in (optimistic on both)
+  const removeRepo = useCallback(
+    (repoId: string) =>
+      runMutation(() => {
+        setSaved((prev) => prev.filter((r) => r.id !== repoId));
+        setArchived((prev) => prev.filter((r) => r.id !== repoId));
+      }, () => removeRepoAction({ githubId: repoId })),
+    [runMutation],
+  );
+
+  // Un-archive and re-probe next load; let the server snapshot place it back
+  const restoreRepo = useCallback(
+    (repoId: string) =>
+      runMutation(
+        () => {},
+        () => restoreRepoAction({ githubId: repoId }),
+      ),
+    [runMutation],
+  );
+
   const value = useMemo<SavedReposContextValue>(() => {
     const sorted = [...saved].sort((a, b) => b.savedAt.localeCompare(a.savedAt));
     return {
       saved: sorted,
       savedIds: sorted.map((r) => r.id),
+      archived,
       allTags: Array.from(new Set(saved.flatMap((r) => r.tags))).sort(),
       folders,
       isReady,
@@ -248,9 +297,13 @@ export const SavedReposProvider = ({
       renameFolder,
       deleteFolder,
       setRepoFolder,
+      reconcileAvailability,
+      removeRepo,
+      restoreRepo,
     };
   }, [
     saved,
+    archived,
     folders,
     isReady,
     toggleSave,
@@ -260,6 +313,9 @@ export const SavedReposProvider = ({
     renameFolder,
     deleteFolder,
     setRepoFolder,
+    reconcileAvailability,
+    removeRepo,
+    restoreRepo,
   ]);
 
   return (

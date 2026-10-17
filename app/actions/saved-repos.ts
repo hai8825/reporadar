@@ -5,6 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { SavedRepo } from "@/lib/types";
+import { planAvailability } from "@/lib/utils/availability";
 import { normalizeTag } from "@/lib/utils/tags";
 
 // All saved-repo mutations live here as Server Actions. Each returns the full
@@ -13,11 +14,14 @@ import { normalizeTag } from "@/lib/utils/tags";
 // avoids hand-rolled cache merging.
 
 export type SavedState = {
-  saved: SavedRepo[];
+  saved: SavedRepo[]; // live + unavailable (still refetched), most recent first
+  archived: SavedRepo[]; // dropped from refetch; kept for the Archived view
   folders: string[];
 };
 
 const githubId = z.string().min(1).max(200);
+// Cap the reconcile payload — GitHub's nodes() tops out at 100 ids anyway.
+const githubIdList = z.array(githubId).max(1000);
 const nameWithOwner = z.string().min(1).max(300);
 const tagName = z.string().min(1).max(100);
 const folderName = z.string().min(1).max(100);
@@ -35,6 +39,27 @@ const requireUserId = async (): Promise<string> => {
   if (!user) throw new Error("Session is no longer valid. Please sign in again.");
   return session.user.id;
 };
+
+type RepoRow = {
+  githubId: string;
+  nameWithOwner: string;
+  savedAt: Date;
+  folder: { name: string } | null;
+  tags: { tag: { name: string } }[];
+  unavailableSince: Date | null;
+  archivedAt: Date | null;
+};
+
+// DB row → client-facing shape (keyed by GitHub node id, as before)
+const toClient = (repo: RepoRow): SavedRepo => ({
+  id: repo.githubId,
+  nameWithOwner: repo.nameWithOwner,
+  savedAt: repo.savedAt.toISOString(),
+  tags: repo.tags.map((t) => t.tag.name),
+  folder: repo.folder?.name ?? null,
+  unavailableSince: repo.unavailableSince?.toISOString() ?? null,
+  archivedAt: repo.archivedAt?.toISOString() ?? null,
+});
 
 // Single source of truth for the client-facing shape
 const loadState = async (userId: string): Promise<SavedState> => {
@@ -54,16 +79,17 @@ const loadState = async (userId: string): Promise<SavedState> => {
     }),
   ]);
 
-  return {
-    saved: repos.map((repo) => ({
-      id: repo.githubId, // client keys repos by GitHub node id, as before
-      nameWithOwner: repo.nameWithOwner,
-      savedAt: repo.savedAt.toISOString(),
-      tags: repo.tags.map((t) => t.tag.name),
-      folder: repo.folder?.name ?? null,
-    })),
-    folders: folders.map((f) => f.name),
-  };
+  // Archived repos live in their own list and are excluded from the refetch;
+  // everything else (live + grace-period unavailable) stays in `saved`.
+  const saved: SavedRepo[] = [];
+  const archived: SavedRepo[] = [];
+  for (const repo of repos) {
+    (repo.archivedAt ? archived : saved).push(toClient(repo));
+  }
+  // Most-recently-archived first reads best in the Archived view
+  archived.sort((a, b) => (b.archivedAt ?? "").localeCompare(a.archivedAt ?? ""));
+
+  return { saved, archived, folders: folders.map((f) => f.name) };
 };
 
 // Read path is tolerant: a stale JWT (user row gone) resolves to empty state
@@ -74,12 +100,84 @@ export const getSavedState = async (): Promise<
 > => {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  if (!userId) return { saved: [], folders: [] };
+  if (!userId) return { saved: [], archived: [], folders: [] };
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true },
   });
-  if (!user) return { saved: [], folders: [], staleSession: true };
+  if (!user) return { saved: [], archived: [], folders: [], staleSession: true };
+  return loadState(userId);
+};
+
+// Reconcile availability from a GitHub load. `resolvedIds` are the node ids the
+// API actually returned — repos that resolved. Clears the unavailable stamp on
+// recovery, stamps newly-missing repos, and archives those past the grace
+// period (see planAvailability). MUST only be called with ids from a SUCCESSFUL
+// response; the client skips this entirely when the query errored with no data.
+export const reconcileAvailability = async (input: {
+  resolvedIds: string[];
+}): Promise<SavedState> => {
+  const userId = await requireUserId();
+  const resolved = new Set(githubIdList.parse(input.resolvedIds));
+
+  // Only non-archived rows are candidates; archived ones stay inert.
+  const rows = await prisma.savedRepo.findMany({
+    where: { userId, archivedAt: null },
+    select: { githubId: true, unavailableSince: true, archivedAt: true },
+  });
+
+  const now = new Date();
+  const { clear, mark, archive } = planAvailability(rows, resolved, now);
+
+  const writes = [];
+  if (clear.length)
+    writes.push(
+      prisma.savedRepo.updateMany({
+        where: { userId, githubId: { in: clear } },
+        data: { unavailableSince: null },
+      }),
+    );
+  if (mark.length)
+    writes.push(
+      prisma.savedRepo.updateMany({
+        where: { userId, githubId: { in: mark } },
+        data: { unavailableSince: now },
+      }),
+    );
+  if (archive.length)
+    writes.push(
+      prisma.savedRepo.updateMany({
+        where: { userId, githubId: { in: archive } },
+        data: { archivedAt: now },
+      }),
+    );
+  if (writes.length) await prisma.$transaction(writes);
+
+  return loadState(userId);
+};
+
+// Hard-delete a saved repo (user-initiated from the unavailable/archived list).
+// Tag joins cascade; a repo gone from GitHub can't be re-fetched anyway.
+export const removeRepo = async (input: {
+  githubId: string;
+}): Promise<SavedState> => {
+  const userId = await requireUserId();
+  const id = githubId.parse(input.githubId);
+  await prisma.savedRepo.deleteMany({ where: { userId, githubId: id } });
+  return loadState(userId);
+};
+
+// Un-archive: clear both stamps so the next load re-probes the repo against
+// GitHub (useful if access was restored, or the repo was only temporarily gone).
+export const restoreRepo = async (input: {
+  githubId: string;
+}): Promise<SavedState> => {
+  const userId = await requireUserId();
+  const id = githubId.parse(input.githubId);
+  await prisma.savedRepo.updateMany({
+    where: { userId, githubId: id },
+    data: { archivedAt: null, unavailableSince: null },
+  });
   return loadState(userId);
 };
 
