@@ -47,4 +47,9 @@ export type SavedRepo = {
   savedAt: string; // ISO date, used for sort order
   tags: string[]; // freeform labels, e.g. "esp32" — a repo can have many
   folder: string | null; // a repo lives in at most ONE folder (collection)
+  // Availability lifecycle (ISO dates). unavailableSince: first load the repo's
+  // GitHub node failed to resolve, cleared when it resolves again. archivedAt:
+  // set once it has been unavailable past the grace period. Both null = live.
+  unavailableSince: string | null;
+  archivedAt: string | null;
 };
